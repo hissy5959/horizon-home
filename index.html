@@ -65,7 +65,7 @@
   #weekly .row svg{width:17px;height:17px}
   #weekly .row .pop{color:var(--accent)}
 
-  #videoPanel{background:var(--panel-dark);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;justify-content:center;min-height:0}
+  #videoPanel{background:var(--panel-dark);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;align-self:start;min-height:0}
   #playerWrap{position:relative;width:100%;aspect-ratio:16/9;flex:none;margin:8px auto 0;border-radius:10px;overflow:hidden;background:#000}
   #playerWrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
   #videoPlaceholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:13px;text-align:center;padding:0 20px}
@@ -538,19 +538,6 @@ function pickNextVideo(){
   if (ids.length > 1 && id === lastVideo) id = ids[(ids.indexOf(id)+1) % ids.length];
   lastVideo = id; return id;
 }
-/* 映像の窓を16:9ちょうどの大きさに合わせる（窓だけ伸びて黒帯が出ないように） */
-function fitPlayer(){
-  const panel = $('#videoPanel'), wrap = $('#playerWrap');
-  if (!panel || !wrap) return;
-  const availW = panel.clientWidth - 28; // 左右padding 14pxずつ
-  const availH = panel.clientHeight - 28 - $('#videoLabel').offsetHeight - $('#raceStrip').offsetHeight - 18; // 上下padding＋各マージン
-  if (availW <= 0 || availH <= 0) return;
-  let w = availW, h = w * 9 / 16;
-  if (h > availH){ h = availH; w = h * 16 / 9; }
-  wrap.style.width = Math.floor(w) + 'px';
-  wrap.style.height = Math.floor(h) + 'px';
-}
-window.addEventListener('resize', fitPlayer);
 function showPlaceholder(html){
   const p = $('#videoPlaceholder'); p.innerHTML = html; p.style.display = 'flex';
 }
@@ -735,10 +722,9 @@ function updateRaceStrip(){
   el.textContent = parts.length ? parts.join(' ・ ') : '次の重賞は未登録です（CONFIG.gradedRaces に追加できます）';
 }
 if (!LITE){
-setInterval(()=>{ checkRaceMode(); rotationTick(); updateRaceStrip(); fitPlayer(); }, 20000);
+setInterval(()=>{ checkRaceMode(); rotationTick(); updateRaceStrip(); }, 20000);
 setInterval(videoWatchdog, 8000);
-checkRaceMode(); updateRaceStrip(); fitPlayer();
-setTimeout(fitPlayer, 600);
+checkRaceMode(); updateRaceStrip();
 }
 
 /* ---------- 室内の温湿度（中継URLから取得） ---------- */
