@@ -22,6 +22,7 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
   body{
+    height:100vh;height:100svh;
     margin:0;padding:14px;overflow:hidden;color:var(--text);
     padding-top:max(14px,env(safe-area-inset-top));padding-right:max(14px,env(safe-area-inset-right));
     padding-bottom:max(14px,env(safe-area-inset-bottom));padding-left:max(14px,env(safe-area-inset-left));
@@ -49,7 +50,7 @@
 
   /* メイン2カラム */
   #main{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;flex:1;min-height:0}
-  #weather{padding:14px;display:flex;flex-direction:column}
+  #weather{padding:14px;display:flex;flex-direction:column;overflow:hidden}
   #wNow{display:flex;align-items:center;gap:12px;margin-top:6px}
   #wIcon svg{width:56px;height:56px}
   #wTemp{font-size:44px;font-weight:800}
@@ -58,7 +59,7 @@
   #hourly .h{flex:1;background:rgba(255,255,255,.08);border-radius:8px;padding:5px 0;text-align:center;font-size:11px}
   #hourly .h svg{width:18px;height:18px;vertical-align:-4px}
   #weeklyLabel{margin-top:12px}
-  #weekly .row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:12px}
+  #weekly .row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:12px}
   #weekly .row:last-child{border-bottom:0}
   #weekly .row .d{display:flex;align-items:center;gap:6px}
   #weekly .row svg{width:17px;height:17px}
@@ -71,7 +72,7 @@
   #raceStrip{margin-top:10px;font-size:11px;color:#c8d8ea;background:rgba(255,255,255,.07);border-radius:8px;padding:6px 9px}
 
   /* スマートホーム帯 */
-  #smarthome{display:flex;gap:10px;align-items:stretch;padding:10px 14px}
+  #smarthome{display:flex;gap:10px;align-items:stretch;padding:10px 14px;flex-shrink:0}
   #room{min-width:180px}
   #roomTemp{font-size:20px;font-weight:800}
   #roomTemp .hum{font-size:14px;font-weight:600}
