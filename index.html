@@ -65,8 +65,8 @@
   #weekly .row svg{width:17px;height:17px}
   #weekly .row .pop{color:var(--accent)}
 
-  #videoPanel{background:var(--panel-dark);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;min-height:0}
-  #playerWrap{flex:1;position:relative;margin-top:8px;border-radius:10px;overflow:hidden;background:#000;min-height:0}
+  #videoPanel{background:var(--panel-dark);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;justify-content:center;min-height:0}
+  #playerWrap{position:relative;width:100%;aspect-ratio:16/9;flex:none;margin:8px auto 0;border-radius:10px;overflow:hidden;background:#000}
   #playerWrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
   #videoPlaceholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:13px;text-align:center;padding:0 20px}
   #raceStrip{margin-top:10px;font-size:11px;color:#c8d8ea;background:rgba(255,255,255,.07);border-radius:8px;padding:6px 9px}
@@ -95,6 +95,16 @@
   @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
   #toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:rgba(5,10,20,.9);border:1px solid var(--line);color:var(--text);padding:8px 14px;border-radius:999px;font-size:12px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9}
+
+  /* 軽量モード（テレビ用：URLに ?lite=1 を付けると有効）
+     映像パネルと家電操作を省き、ぼかし・背景切替・ティッカーのアニメーションを止める */
+  body.lite .glass{backdrop-filter:none;background:rgba(8,17,32,.88)}
+  body.lite .bgLayer{transition:none}
+  body.lite #videoPanel{display:none}
+  body.lite #appliances{display:none}
+  body.lite #main{grid-template-columns:1fr}
+  body.lite #tickerTrack{animation:none;display:block}
+  body.lite #tickerTrack a{display:block;overflow:hidden;text-overflow:ellipsis;margin-right:0}
 </style>
 </head>
 <body>
@@ -281,6 +291,9 @@ function groupFor(code){ // 背景用の天気グループ
 
 /* ---------- 小物 ---------- */
 const $ = s => document.querySelector(s);
+// 軽量モード（テレビなど低速なブラウザ用）：?lite=1 または ?tv=1 で有効
+const LITE = new URLSearchParams(location.search).has('lite') || new URLSearchParams(location.search).has('tv');
+if (LITE) document.body.classList.add('lite');
 const pad = n => String(n).padStart(2,'0');
 const todayKey = (d=new Date()) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 let toastTimer = null;
@@ -376,7 +389,7 @@ function updateBackground(force){
   img.onerror = () => { /* 読めなければ今の背景のまま */ };
   img.src = next;
 }
-setInterval(()=> updateBackground(false), 30*60*1000);
+if (!LITE) setInterval(()=> updateBackground(false), 30*60*1000); // 軽量モードでは背景を切り替えない
 
 /* ---------- セールバナー ---------- */
 function checkSale(){
@@ -444,10 +457,27 @@ return items.filter(i =>!ex.some(w => i.title.includes(w)))
 .sort((a,b)=> b.date - a.date).slice(0, 12);
 }
 const NEWS_CACHE_KEY = 'hh-news-cache-v1';
+let tickerItems = [], tickerIdx = 0, tickerTimer = null;
+function tickerAnchor(i){
+return `<a href="${i.link}" target="_blank" rel="noopener"><b>【${i.label}】</b>${String(i.title).replace(/</g,'&lt;')}</a>`;
+}
 function renderTicker(items){
-const html = items.map(i =>
-`<a href="${i.link}" target="_blank" rel="noopener"><b>【${i.label}】</b>${String(i.title).replace(/</g,'&lt;')}</a>`).join('');
 const track = $('#tickerTrack');
+tickerItems = items;
+if (LITE){
+// 軽量モード：流さずに1本ずつ切り替える（アニメーション負荷をなくす）
+const show = () => {
+if (!tickerItems.length) return;
+track.innerHTML = tickerAnchor(tickerItems[tickerIdx % tickerItems.length]);
+tickerIdx++;
+};
+show();
+if (tickerTimer) clearInterval(tickerTimer);
+if (tickerItems.length > 1) tickerTimer = setInterval(show, 7000);
+track.dataset.loaded = '1';
+return;
+}
+const html = items.map(tickerAnchor).join('');
 track.innerHTML = html + html; // 2周分つないで無限ループ
 track.style.animationDuration = `${Math.max(40, items.length * 6)}s`; // 目安: 1本あたり6秒
 track.dataset.loaded = '1';
@@ -508,6 +538,19 @@ function pickNextVideo(){
   if (ids.length > 1 && id === lastVideo) id = ids[(ids.indexOf(id)+1) % ids.length];
   lastVideo = id; return id;
 }
+/* 映像の窓を16:9ちょうどの大きさに合わせる（窓だけ伸びて黒帯が出ないように） */
+function fitPlayer(){
+  const panel = $('#videoPanel'), wrap = $('#playerWrap');
+  if (!panel || !wrap) return;
+  const availW = panel.clientWidth - 28; // 左右padding 14pxずつ
+  const availH = panel.clientHeight - 28 - $('#videoLabel').offsetHeight - $('#raceStrip').offsetHeight - 18; // 上下padding＋各マージン
+  if (availW <= 0 || availH <= 0) return;
+  let w = availW, h = w * 9 / 16;
+  if (h > availH){ h = availH; w = h * 16 / 9; }
+  wrap.style.width = Math.floor(w) + 'px';
+  wrap.style.height = Math.floor(h) + 'px';
+}
+window.addEventListener('resize', fitPlayer);
 function showPlaceholder(html){
   const p = $('#videoPlaceholder'); p.innerHTML = html; p.style.display = 'flex';
 }
@@ -520,6 +563,7 @@ function rotationSources(){
 }
 function rotationActive(){ return !CONFIG.videoIds.filter(Boolean).length && rotationSources().length > 0; }
 let rotIdx = 0, rotDeadline = Date.now() + ((CONFIG.videoRotation && CONFIG.videoRotation.minutes) || 20) * 60000;
+let rotStartIndex = 0, lastPlayPos = -1, stuckSince = 0, stuckSkips = 0;
 try { rotIdx = Math.min(Math.max(0, parseInt(localStorage.getItem('hh-rot-idx') || '0', 10) || 0), Math.max(0, rotationSources().length - 1)); } catch(_){}
 let rotErrStreak = 0, rotFailCycles = 0, rotGaveUp = false;
 function baseVideoLabel(){
@@ -549,7 +593,8 @@ function applyRotation(){
     const p = document.getElementById('player'); if (p) p.style.display = 'block';
     hidePlaceholder();
     if (ytPlayer && ytPlayer.loadPlaylist){
-      ytPlayer.loadPlaylist({ list: uploadsOf(src), listType: 'playlist', index: 0 });
+      ytPlayer.loadPlaylist({ list: uploadsOf(src), listType: 'playlist', index: rotStartIndex });
+      rotStartIndex = 0;
       ytPlayer.setLoop(true); ytPlayer.mute(); ytPlayer.playVideo();
     }
   }
@@ -568,10 +613,37 @@ function handleRotateError(){
   if (rotErrStreak >= 3){
     rotFailCycles++;
     if (rotFailCycles >= rotationSources().length){ showVideoGiveUp(); return; }
+    rotStartIndex = 1 + Math.floor(Math.random()*3); // 先頭の再生不可動画を避けて少し後ろから始める
     advanceRotation();
     return;
   }
   try { ytPlayer.nextVideo(); } catch(_){}
+}
+/* 見張り機能：再生できるはずなのに時間が進んでいない状態が続いたら、強制的に次へ進める。
+   iPadでは「この動画は再生されません」と表示されてもエラー通知が来ないことがあるため、
+   エラー通知だけに頼らず、再生位置が進んでいるかを定期的に確認する。 */
+function skipStuck(){
+  if (mode === 'rotate'){
+    stuckSkips++;
+    if (stuckSkips >= 2){ stuckSkips = 0; rotStartIndex = 1 + Math.floor(Math.random()*3); advanceRotation(); }
+    else { try { ytPlayer.nextVideo(); } catch(_){ } }
+  } else if (mode === 'fav'){
+    const n = pickNextVideo(); if (n) ytPlayer.loadVideoById(n);
+  }
+}
+function videoWatchdog(){
+  if (!ytPlayer || !ytPlayer.getPlayerState || mode === 'jra') return;
+  const src = rotationSources()[rotIdx];
+  if (mode === 'rotate' && src && src.type === 'live') return; // ライブ表示中はプレーヤーが止まっていて正常
+  let st, t = 0;
+  try { st = ytPlayer.getPlayerState(); t = ytPlayer.getCurrentTime() || 0; } catch(_){ return; }
+  const now = Date.now();
+  if (st === 1 && t > lastPlayPos + 0.5){ lastPlayPos = t; stuckSince = 0; stuckSkips = 0; return; } // 正常に再生中
+  if (!stuckSince){ stuckSince = now; return; }
+  if (now - stuckSince < 25000) return; // 25秒までは読み込み待ちとして様子を見る
+  stuckSince = now; lastPlayPos = -1;
+  if (st === 2){ try { ytPlayer.playVideo(); } catch(_){ } return; } // 一時停止していたら再生に戻す
+  skipStuck();
 }
 function onYouTubeIframeAPIReady(){
   const id = pickNextVideo();
@@ -603,7 +675,7 @@ function onYouTubeIframeAPIReady(){
   }
   showPlaceholder('動画が未設定です<br>index.html の CONFIG.videoIds に動画IDを入れるか、videoRotation を有効にしてください');
 }
-{ const tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag); }
+if (!LITE){ const tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag); }
 
 /* レース判定：今日の発走リストから「窓」の中か、次の発走は何か */
 function raceStatus(now = new Date()){
@@ -662,8 +734,12 @@ function updateRaceStrip(){
   }
   el.textContent = parts.length ? parts.join(' ・ ') : '次の重賞は未登録です（CONFIG.gradedRaces に追加できます）';
 }
-setInterval(()=>{ checkRaceMode(); rotationTick(); updateRaceStrip(); }, 20000);
-checkRaceMode(); updateRaceStrip();
+if (!LITE){
+setInterval(()=>{ checkRaceMode(); rotationTick(); updateRaceStrip(); fitPlayer(); }, 20000);
+setInterval(videoWatchdog, 8000);
+checkRaceMode(); updateRaceStrip(); fitPlayer();
+setTimeout(fitPlayer, 600);
+}
 
 /* ---------- 室内の温湿度（中継URLから取得） ---------- */
 function comfortText(t, h){
