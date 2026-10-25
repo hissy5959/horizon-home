@@ -227,13 +227,13 @@ const CONFIG = {
   // ニュース取得に使う中継（任意）。自前のWorkerを使う場合は
   // 'https://あなたのWorker/rss?url=' のように末尾を ?url= にして指定。
   // 空のままだと公開プロキシ（allorigins → codetabs）の順に試します。
-  newsProxyPrefix: '',
+  newsProxyPrefix: 'https://horizon-home-proxy.hissy5599.workers.dev/rss?url=',
 
   // 室内の温湿度（SwitchBot中継URL。cloudflare-worker.js 参照）
   // 例: 'https://horizon-home-proxy.example.workers.dev/'
   // 空のままだと室温・湿度は「未設定」表示になります。
   // ※ SwitchBotのトークン/シークレットをこのファイルに直接書かないこと！
-  roomProxyUrl: '',
+  roomProxyUrl: 'https://horizon-home-proxy.hissy5599.workers.dev/',
 
   // 背景写真プール（Unsplash）。天気×時間帯でグループが選ばれ、その中からランダム表示。
   backgrounds: {
