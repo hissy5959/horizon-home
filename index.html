@@ -2,8 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#07111f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HORIZON HOME">
 <title>HORIZON HOME</title>
 <style>
   :root{
@@ -19,6 +23,8 @@
   html,body{height:100%}
   body{
     margin:0;padding:14px;overflow:hidden;color:var(--text);
+    padding-top:max(14px,env(safe-area-inset-top));padding-right:max(14px,env(safe-area-inset-right));
+    padding-bottom:max(14px,env(safe-area-inset-bottom));padding-left:max(14px,env(safe-area-inset-left));
     font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
     background:#1b2a44;
   }
@@ -116,7 +122,7 @@
     </section>
 
     <section id="videoPanel">
-      <div class="label">YOUTUBE ・ お気に入り</div>
+      <div class="label" id="videoLabel">YOUTUBE</div>
       <div id="playerWrap">
         <div id="player"></div>
         <iframe id="liveFrame" style="display:none" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
@@ -160,10 +166,18 @@ const CONFIG = {
   lat: 35.0116, lon: 135.7681, placeName: '京都',
 
   // お気に入り動画のYouTube動画ID（URLの v= の後ろの文字列）
-  // 例: 'dQw4w9WgXcQ' 。空のままだと案内文が表示されます。
+  // 例: 'dQw4w9WgXcQ' 。空のままだと下のニュース動画が流れます。
   videoIds: [
     // 'ここに動画ID',
   ],
+
+  // 最新ニュース動画（お気に入りが空のときに使われます）
+  // 指定チャンネルの「アップロード動画」を新しい順に繰り返し再生します。
+  newsVideo: {
+    enabled: true,
+    channelId: 'UCGCZAYq5Xxojl_tSXcVJhiQ', // ANNnewsCH（テレ朝NEWS）
+    label: 'ANNニュース',
+  },
 
   // JRA公式ライブ（開催日の発走前後だけ自動で切り替え）
   jra: {
@@ -491,26 +505,46 @@ function showPlaceholder(html){
   const p = $('#videoPlaceholder'); p.innerHTML = html; p.style.display = 'flex';
 }
 function hidePlaceholder(){ $('#videoPlaceholder').style.display = 'none'; }
+function newsUploadsId(){
+  const cid = CONFIG.newsVideo && CONFIG.newsVideo.channelId;
+  return cid ? 'UU' + cid.slice(2) : ''; // チャンネルの「アップロード動画」プレイリスト
+}
+function baseVideoLabel(){
+  if (CONFIG.videoIds.filter(Boolean).length) return 'YOUTUBE ・ お気に入り';
+  if (CONFIG.newsVideo && CONFIG.newsVideo.enabled) return `YOUTUBE ・ ${CONFIG.newsVideo.label || 'ニュース動画'}`;
+  return 'YOUTUBE';
+}
+function setVideoLabel(t){ const el = $('#videoLabel'); if (el) el.textContent = t; }
 function onYouTubeIframeAPIReady(){
   const id = pickNextVideo();
-  if (!id){ showPlaceholder('お気に入り動画が未設定です<br>index.html の CONFIG.videoIds に動画IDを入れると、ここでランダム再生されます'); return; }
-  hidePlaceholder();
-  ytPlayer = new YT.Player('player', {
-    videoId: id,
-    playerVars: { autoplay:1, mute:1, playsinline:1, rel:0, controls:1 },
-    events: {
-      onReady: e => { e.target.mute(); e.target.playVideo(); },
-      onStateChange: e => { if (e.data === YT.PlayerState.ENDED){ const n = pickNextVideo(); if (n) ytPlayer.loadVideoById(n); } },
-      onError: () => { const n = pickNextVideo(); if (n) setTimeout(()=> ytPlayer.loadVideoById(n), 1500); },
-    },
-  });
+  if (id){
+    setVideoLabel(baseVideoLabel()); hidePlaceholder();
+    ytPlayer = new YT.Player('player', {
+      videoId: id,
+      playerVars: { autoplay:1, mute:1, playsinline:1, rel:0, controls:1 },
+      events: {
+        onReady: e => { e.target.mute(); if (mode === 'live') e.target.pauseVideo(); else e.target.playVideo(); },
+        onStateChange: e => { if (e.data === YT.PlayerState.ENDED){ const n = pickNextVideo(); if (n) ytPlayer.loadVideoById(n); } },
+        onError: () => { const n = pickNextVideo(); if (n) setTimeout(()=> ytPlayer.loadVideoById(n), 1500); },
+      },
+    });
+    return;
+  }
+  const list = newsUploadsId();
+  if (CONFIG.newsVideo && CONFIG.newsVideo.enabled && list){
+    setVideoLabel(baseVideoLabel()); hidePlaceholder();
+    ytPlayer = new YT.Player('player', {
+      playerVars: { autoplay:1, mute:1, playsinline:1, rel:0, controls:1, listType:'playlist', list },
+      events: {
+        onReady: e => { e.target.mute(); e.target.setLoop(true); if (mode === 'live') e.target.pauseVideo(); else e.target.playVideo(); },
+        onError: () => { try { ytPlayer.nextVideo(); } catch(_){} }, // 再生できない動画は次へ
+      },
+    });
+    return;
+  }
+  showPlaceholder('動画が未設定です<br>index.html の CONFIG.videoIds に動画IDを入れるか、newsVideo を有効にしてください');
 }
-if (CONFIG.videoIds.filter(Boolean).length){
-  const tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api';
-  document.head.appendChild(tag);
-} else {
-  showPlaceholder('お気に入り動画が未設定です<br>index.html の CONFIG.videoIds に動画IDを入れると、ここでランダム再生されます');
-}
+{ const tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag); }
 
 /* レース判定：今日の発走リストから「窓」の中か、次の発走は何か */
 function raceStatus(now = new Date()){
@@ -530,17 +564,17 @@ function checkRaceMode(){
   const { live } = raceStatus();
   const frame = $('#liveFrame');
   if (live && mode !== 'live'){
-    mode = 'live'; hidePlaceholder();
+    mode = 'live'; hidePlaceholder(); setVideoLabel('YOUTUBE ・ JRAライブ');
     if (ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
     frame.src = `https://www.youtube.com/embed/live_stream?channel=${CONFIG.jra.channelId}&autoplay=1&mute=1&playsinline=1&rel=0`;
     frame.style.display = 'block';
     const p = document.getElementById('player'); if (p) p.style.display = 'none';
   } else if (!live && mode === 'live'){
-    mode = 'fav';
+    mode = 'fav'; setVideoLabel(baseVideoLabel());
     frame.removeAttribute('src'); frame.style.display = 'none';
     const p = document.getElementById('player'); if (p) p.style.display = 'block';
     if (ytPlayer && ytPlayer.playVideo){ ytPlayer.mute(); ytPlayer.playVideo(); }
-    else if (!CONFIG.videoIds.filter(Boolean).length) showPlaceholder('お気に入り動画が未設定です<br>index.html の CONFIG.videoIds に動画IDを入れると、ここでランダム再生されます');
+    else if (!CONFIG.videoIds.filter(Boolean).length && !(CONFIG.newsVideo && CONFIG.newsVideo.enabled)) showPlaceholder('動画が未設定です');
   }
 }
 function updateRaceStrip(){
