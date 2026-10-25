@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- HORIZON HOME build: 2026-10-26 news-card (YouTube廃止・軽量モード削除済み) -->
+<!-- HORIZON HOME build: 2026-10-26 news-card2 (YouTube廃止・軽量モード削除済み) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -365,6 +365,39 @@ function checkSale(){
 }
 checkSale(); setInterval(checkSale, 60*60*1000);
 
+/* ---------- 右パネル：ニュース＆セールの回転カード ---------- */
+let cardItems = [], cardIdx = 0, cardTimer = null;
+function relTime(d){
+const t = d instanceof Date ? d.getTime() : new Date(d).getTime();
+const m = Math.max(1, Math.round((Date.now() - t) / 60000));
+if (m < 60) return `${m}分前`;
+const h = Math.round(m / 60);
+return h < 24 ? `${h}時間前` : `${Math.round(h / 24)}日前`;
+}
+function showCard(){
+if (!cardItems.length) return;
+const pos = cardIdx % cardItems.length;
+const i = cardItems[pos];
+cardIdx++;
+const cat = $('#cardCat');
+cat.textContent = i.label;
+cat.className = i.cat === 'sale' ? 'sale' : 'news';
+$('#cardTitle').textContent = i.title;
+$('#cardMeta').textContent = `${i.label} ・ ${relTime(i.date || Date.now())}`;
+$('#card').href = i.link;
+const total = Math.min(cardItems.length, 20);
+const p = pos % total;
+$('#cardDots').textContent = Array.from({length: total}, (_, k) => k === p ? '●' : '○').join('');
+}
+function setCardItems(items){
+if (!items || !items.length) return;
+cardItems = items;
+if (cardTimer) clearInterval(cardTimer);
+cardIdx = 0;
+showCard();
+if (cardItems.length > 1) cardTimer = setInterval(showCard, 10000);
+}
+
 /* ---------- ニュース（Google News RSSをallorigins経由で取得） ---------- */
 const NEWS_FEEDS = [
 { key:'top', label:'トップ', url:'https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja'},
@@ -478,39 +511,6 @@ tickerEl.addEventListener('touchstart', ()=> tickerEl.classList.add('paused'), {
 tickerEl.addEventListener('touchend', ()=> setTimeout(()=> tickerEl.classList.remove('paused'), 2500));
 tickerEl.addEventListener('mouseenter', ()=> tickerEl.classList.add('paused'));
 tickerEl.addEventListener('mouseleave', ()=> tickerEl.classList.remove('paused'));
-
-/* ---------- 右パネル：ニュース＆セールの回転カード ---------- */
-let cardItems = [], cardIdx = 0, cardTimer = null;
-function relTime(d){
-const t = d instanceof Date ? d.getTime() : new Date(d).getTime();
-const m = Math.max(1, Math.round((Date.now() - t) / 60000));
-if (m < 60) return `${m}分前`;
-const h = Math.round(m / 60);
-return h < 24 ? `${h}時間前` : `${Math.round(h / 24)}日前`;
-}
-function showCard(){
-if (!cardItems.length) return;
-const pos = cardIdx % cardItems.length;
-const i = cardItems[pos];
-cardIdx++;
-const cat = $('#cardCat');
-cat.textContent = i.label;
-cat.className = i.cat === 'sale' ? 'sale' : 'news';
-$('#cardTitle').textContent = i.title;
-$('#cardMeta').textContent = `${i.label} ・ ${relTime(i.date || Date.now())}`;
-$('#card').href = i.link;
-const total = Math.min(cardItems.length, 20);
-const p = pos % total;
-$('#cardDots').textContent = Array.from({length: total}, (_, k) => k === p ? '●' : '○').join('');
-}
-function setCardItems(items){
-if (!items || !items.length) return;
-cardItems = items;
-if (cardTimer) clearInterval(cardTimer);
-cardIdx = 0;
-showCard();
-if (cardItems.length > 1) cardTimer = setInterval(showCard, 10000);
-}
 
 /* レース判定：今日の発走リストから次の発走を出す（下の帯表示用） */
 function raceStatus(now = new Date()){
