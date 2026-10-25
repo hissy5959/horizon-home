@@ -189,7 +189,7 @@ const CONFIG = {
     minutes: 20, // 切り替え間隔（分）
     sources: [
       { type: 'videos', channelId: 'UCGCZAYq5Xxojl_tSXcVJhiQ', label: 'ANNニュース' },
-      { type: 'live',   channelId: 'UCNsidkYpIAQ4QaufptQBPHQ', label: 'ウェザーニュースLiVE' },
+      { type: 'videos', channelId: 'UCNsidkYpIAQ4QaufptQBPHQ', label: 'ウェザーニュース' }, // ライブ埋め込みは再生状態を外から監視できず固まるため最新動画方式に変更
       { type: 'videos', channelId: 'UCeCmAYh1ylwIsgGrmqaklzg', label: 'TBS NEWS DIG' },
       { type: 'videos', channelId: 'UCWt0yfrBaUk148rxaOp4b4w', label: '日テレNEWS' },
     ],
@@ -639,7 +639,8 @@ function videoWatchdog(){
   const src = rotationSources()[rotIdx];
   if (mode === 'rotate' && src && src.type === 'live') return; // ライブ表示中はプレーヤーが止まっていて正常
   let st, t = 0;
-  try { st = ytPlayer.getPlayerState(); t = ytPlayer.getCurrentTime() || 0; } catch(_){ return; }
+  try { st = ytPlayer.getPlayerState(); } catch(_){ return; }
+  try { t = ytPlayer.getCurrentTime() || 0; } catch(_){ t = 0; } // 時刻が取れない場合も「進んでいない」として扱う
   const now = Date.now();
   if (st === 1 && t > lastPlayPos + 0.5){ lastPlayPos = t; stuckSince = 0; stuckSkips = 0; return; } // 正常に再生中
   if (!stuckSince){ stuckSince = now; return; }
