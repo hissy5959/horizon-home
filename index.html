@@ -172,11 +172,17 @@ const CONFIG = {
   ],
 
   // 最新ニュース動画（お気に入りが空のときに使われます）
-  // 指定チャンネルの「アップロード動画」を新しい順に繰り返し再生します。
+  // 各チャンネルの「アップロード動画」を新しい順に繰り返し再生します。
+  // 埋め込み再生が禁止されているチャンネルは自動で次のチャンネルに切り替わります。
   newsVideo: {
     enabled: true,
-    channelId: 'UCGCZAYq5Xxojl_tSXcVJhiQ', // ANNnewsCH（テレ朝NEWS）
-    label: 'ANNニュース',
+    channels: [
+      { channelId: 'UCGCZAYq5Xxojl_tSXcVJhiQ', label: 'ANNニュース' },
+      { channelId: 'UCNsidkYpIAQ4QaufptQBPHQ', label: 'ウェザーニュース' },
+      { channelId: 'UCWt0yfrBaUk148rxaOp4b4w', label: '日テレNEWS' },
+      { channelId: 'UCeCmAYh1ylwIsgGrmqaklzg', label: 'TBS NEWS DIG' },
+      { channelId: 'UCSPEjw8F2nQDtmUKPFNF7_A', label: 'NHK WORLD' },
+    ],
   },
 
   // JRA公式ライブ（開催日の発走前後だけ自動で切り替え）
@@ -505,14 +511,38 @@ function showPlaceholder(html){
   const p = $('#videoPlaceholder'); p.innerHTML = html; p.style.display = 'flex';
 }
 function hidePlaceholder(){ $('#videoPlaceholder').style.display = 'none'; }
-function newsUploadsId(){
-  const cid = CONFIG.newsVideo && CONFIG.newsVideo.channelId;
-  return cid ? 'UU' + cid.slice(2) : ''; // チャンネルの「アップロード動画」プレイリスト
+function newsChannels(){
+  const nv = CONFIG.newsVideo || {};
+  if (Array.isArray(nv.channels) && nv.channels.length) return nv.channels;
+  if (nv.channelId) return [{ channelId: nv.channelId, label: nv.label }];
+  return [];
 }
+let newsChIdx = 0, newsErrStreak = 0, newsSwitches = 0, newsGaveUp = false;
+function uploadsOf(ch){ return ch && ch.channelId ? 'UU' + ch.channelId.slice(2) : ''; }
+function newsUploadsId(){ return uploadsOf(newsChannels()[newsChIdx]); }
 function baseVideoLabel(){
   if (CONFIG.videoIds.filter(Boolean).length) return 'YOUTUBE ・ お気に入り';
-  if (CONFIG.newsVideo && CONFIG.newsVideo.enabled) return `YOUTUBE ・ ${CONFIG.newsVideo.label || 'ニュース動画'}`;
+  const ch = newsChannels()[newsChIdx];
+  if (CONFIG.newsVideo && CONFIG.newsVideo.enabled && ch) return `YOUTUBE ・ ${ch.label || 'ニュース動画'}`;
   return 'YOUTUBE';
+}
+function showNewsGiveUp(){
+  newsGaveUp = true;
+  try { ytPlayer.stopVideo(); } catch(_){}
+  showPlaceholder('ニュース動画を再生できませんでした<br><a href="https://www.youtube.com/@ANNnewsCH" target="_blank" rel="noopener" style="color:#9fc3e8">YouTubeでANNnewsCHを開く</a>');
+}
+function handleNewsError(){
+  if (newsGaveUp) return;
+  newsErrStreak++;
+  const chs = newsChannels();
+  if (newsErrStreak >= 3 && chs.length){
+    newsErrStreak = 0; newsSwitches++;
+    if (newsSwitches >= chs.length){ showNewsGiveUp(); return; }
+    newsChIdx = (newsChIdx + 1) % chs.length;
+    setVideoLabel(baseVideoLabel());
+    try { ytPlayer.loadPlaylist({ list: newsUploadsId(), listType: 'playlist', index: 0 }); ytPlayer.setLoop(true); ytPlayer.playVideo(); return; } catch(_){}
+  }
+  try { ytPlayer.nextVideo(); } catch(_){}
 }
 function setVideoLabel(t){ const el = $('#videoLabel'); if (el) el.textContent = t; }
 function onYouTubeIframeAPIReady(){
@@ -537,7 +567,8 @@ function onYouTubeIframeAPIReady(){
       playerVars: { autoplay:1, mute:1, playsinline:1, rel:0, controls:1, listType:'playlist', list },
       events: {
         onReady: e => { e.target.mute(); e.target.setLoop(true); if (mode === 'live') e.target.pauseVideo(); else e.target.playVideo(); },
-        onError: () => { try { ytPlayer.nextVideo(); } catch(_){} }, // 再生できない動画は次へ
+        onStateChange: e => { if (e.data === YT.PlayerState.PLAYING) newsErrStreak = 0; },
+        onError: () => handleNewsError(), // 再生できない動画は次へ、続くようならチャンネル切替
       },
     });
     return;
@@ -573,7 +604,8 @@ function checkRaceMode(){
     mode = 'fav'; setVideoLabel(baseVideoLabel());
     frame.removeAttribute('src'); frame.style.display = 'none';
     const p = document.getElementById('player'); if (p) p.style.display = 'block';
-    if (ytPlayer && ytPlayer.playVideo){ ytPlayer.mute(); ytPlayer.playVideo(); }
+    if (newsGaveUp){ showNewsGiveUp(); }
+    else if (ytPlayer && ytPlayer.playVideo){ ytPlayer.mute(); ytPlayer.playVideo(); }
     else if (!CONFIG.videoIds.filter(Boolean).length && !(CONFIG.newsVideo && CONFIG.newsVideo.enabled)) showPlaceholder('動画が未設定です');
   }
 }
