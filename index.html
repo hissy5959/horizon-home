@@ -534,9 +534,24 @@ let ytPlayer = null, lastVideo = '', mode = 'rotate'; // 'fav' | 'rotate' | 'jra
 function pickNextVideo(){
   const ids = CONFIG.videoIds.filter(Boolean);
   if (!ids.length) return null;
-  let id = ids[Math.floor(Math.random()*ids.length)];
-  if (ids.length > 1 && id === lastVideo) id = ids[(ids.indexOf(id)+1) % ids.length];
+  const fresh = ids.filter(id => !playedIds.includes(id)); // 再生済みは候補から外す
+  const pool = fresh.length ? fresh : ids;
+  let id = pool[Math.floor(Math.random()*pool.length)];
+  if (pool.length > 1 && id === lastVideo) id = pool[(pool.indexOf(id)+1) % pool.length];
   lastVideo = id; return id;
+}
+/* 再生が始まった動画を記録する。履歴にある動画がまた始まったら次へ送る（ローテーション時）。
+   何度も送り続ける場合は一巡したとみなして履歴をリセットする。 */
+function notePlayed(){
+  let id = '';
+  try { id = (ytPlayer.getVideoData() || {}).video_id || ''; } catch(_){ return; }
+  if (!id) return;
+  if (playedIds.includes(id)){
+    if (mode === 'rotate' && repeatSkips < 6){ repeatSkips++; try { ytPlayer.nextVideo(); } catch(_){ } return; }
+    playedIds = []; repeatSkips = 0;
+  }
+  playedIds.push(id);
+  if (playedIds.length > 30) playedIds.splice(0, playedIds.length - 30);
 }
 function showPlaceholder(html){
   const p = $('#videoPlaceholder'); p.innerHTML = html; p.style.display = 'flex';
@@ -551,6 +566,7 @@ function rotationSources(){
 function rotationActive(){ return !CONFIG.videoIds.filter(Boolean).length && rotationSources().length > 0; }
 let rotIdx = 0, rotDeadline = Date.now() + ((CONFIG.videoRotation && CONFIG.videoRotation.minutes) || 20) * 60000;
 let rotStartIndex = 0, lastPlayPos = -1, stuckSince = 0, stuckSkips = 0;
+let playedIds = [], repeatSkips = 0; // 再生済み動画の履歴（同じ動画を続けて流さないため）
 try { rotIdx = Math.min(Math.max(0, parseInt(localStorage.getItem('hh-rot-idx') || '0', 10) || 0), Math.max(0, rotationSources().length - 1)); } catch(_){}
 let rotErrStreak = 0, rotFailCycles = 0, rotGaveUp = false;
 function baseVideoLabel(){
@@ -627,7 +643,7 @@ function videoWatchdog(){
   const now = Date.now();
   if (st === 1 && t > lastPlayPos + 0.5){ lastPlayPos = t; stuckSince = 0; stuckSkips = 0; return; } // 正常に再生中
   if (!stuckSince){ stuckSince = now; return; }
-  if (now - stuckSince < 25000) return; // 25秒までは読み込み待ちとして様子を見る
+  if (now - stuckSince < 10000) return; // 10秒までは読み込み待ちとして様子を見る
   stuckSince = now; lastPlayPos = -1;
   if (st === 2){ try { ytPlayer.playVideo(); } catch(_){ } return; } // 一時停止していたら再生に戻す
   skipStuck();
@@ -641,7 +657,7 @@ function onYouTubeIframeAPIReady(){
       playerVars: { autoplay:1, mute:1, playsinline:1, rel:0, controls:1 },
       events: {
         onReady: e => { e.target.mute(); if (mode === 'jra') e.target.pauseVideo(); else e.target.playVideo(); },
-        onStateChange: e => { if (e.data === YT.PlayerState.ENDED){ const n = pickNextVideo(); if (n) ytPlayer.loadVideoById(n); } },
+        onStateChange: e => { if (e.data === YT.PlayerState.PLAYING) notePlayed(); if (e.data === YT.PlayerState.ENDED){ const n = pickNextVideo(); if (n) ytPlayer.loadVideoById(n); } },
         onError: () => { const n = pickNextVideo(); if (n) setTimeout(()=> ytPlayer.loadVideoById(n), 1500); },
       },
     });
@@ -654,7 +670,7 @@ function onYouTubeIframeAPIReady(){
       playerVars: { autoplay:1, mute:1, playsinline:1, rel:0, controls:1, listType:'playlist', list: uploadsOf(firstVideo) },
       events: {
         onReady: e => { e.target.mute(); e.target.setLoop(true); applyRotation(); },
-        onStateChange: e => { if (e.data === YT.PlayerState.PLAYING){ rotErrStreak = 0; rotFailCycles = 0; } },
+        onStateChange: e => { if (e.data === YT.PlayerState.PLAYING){ rotErrStreak = 0; rotFailCycles = 0; notePlayed(); } },
         onError: () => handleRotateError(),
       },
     });
@@ -723,7 +739,7 @@ function updateRaceStrip(){
 }
 if (!LITE){
 setInterval(()=>{ checkRaceMode(); rotationTick(); updateRaceStrip(); }, 20000);
-setInterval(videoWatchdog, 8000);
+setInterval(videoWatchdog, 5000);
 checkRaceMode(); updateRaceStrip();
 }
 
