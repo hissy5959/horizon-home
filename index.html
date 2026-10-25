@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -7,355 +6,551 @@
 <meta name="theme-color" content="#07111f">
 <title>HORIZON HOME</title>
 <style>
-:root {
-  --bg:#07111f; --panel:#12243a; --line:#29435e;
-  --blue:#75d2ff; --text:#eff7ff; --muted:#9cb3ca;
-}
-* { box-sizing:border-box; }
-body {
-  margin:0; padding:14px;
-  height:100vh; height:100dvh; overflow:hidden;
-  background:radial-gradient(ellipse at 15% 0%,#183b60,transparent 45%),var(--bg);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",Meiryo,sans-serif;
-}
-.app {
-  max-width:1250px; height:100%; margin:auto;
-  display:grid;
-  grid-template-rows:auto minmax(110px,0.72fr) minmax(0,1.7fr);
-  gap:12px;
-}
-header {
-  display:flex; justify-content:space-between; align-items:center;
-  min-height:26px;
-}
-.brand { font-weight:800; letter-spacing:3px; font-size:16px; }
-.brand span { color:var(--blue); }
-.status { color:#8ee8c0; font-size:10px; letter-spacing:1px; }
-.panel {
-  min-width:0; min-height:0; overflow:hidden;
-  padding:16px; border:1px solid var(--line); border-radius:18px;
-  background:rgba(18,36,58,.9);
-}
-.hero {
-  display:flex; justify-content:space-between; align-items:center; gap:12px;
-  padding:14px 22px;
-  background:linear-gradient(110deg,#183b5b,#0c192a);
-}
-.eyebrow { color:var(--blue); font-size:10px; letter-spacing:2px; }
-.clock {
-  font-size:clamp(44px,7vw,76px); font-weight:300;
-  line-height:1.1; font-variant-numeric:tabular-nums;
-}
-.date { color:var(--muted); font-size:clamp(12px,1.8vw,16px); margin-top:5px; }
-.hero-right { text-align:right; }
-.hero-right .location { color:var(--muted); font-size:12px; }
-.hero-right .temperature { font-size:clamp(28px,4vw,44px); margin:3px 0; }
-.hero-right .description { font-size:12px; color:var(--muted); }
-.grid {
-  min-height:0;
-  display:grid; grid-template-columns:1fr 1fr;
-  grid-template-rows:1fr 1fr; gap:12px;
-}
-h2 {
-  margin:0 0 12px; font-size:12px; font-weight:700;
-  letter-spacing:1.4px; color:var(--blue);
-}
-.weather-details {
-  display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
-  margin-top:14px;
-}
-.stat { padding:9px; border-radius:10px; background:#ffffff08; }
-.stat small { display:block; color:var(--muted); font-size:10px; }
-.stat strong { display:block; font-size:16px; margin-top:4px; }
-.muted { color:var(--muted); font-size:11px; }
-.news-card { display:flex; flex-direction:column; }
-.news-source { color:var(--blue); font-size:10px; margin-bottom:8px; }
-.headline {
-  display:flex; align-items:center; flex:1; min-height:0;
-  color:var(--text); text-decoration:none; font-size:clamp(14px,2vw,19px);
-  font-weight:600; line-height:1.55; overflow-wrap:anywhere;
-}
-.headline:active { color:var(--blue); }
-.news-bottom {
-  display:flex; justify-content:space-between; align-items:center;
-  gap:8px; margin-top:8px; color:var(--muted); font-size:10px;
-}
-.small-button {
-  border:1px solid var(--line); border-radius:8px; padding:6px 10px;
-  color:var(--text); background:#ffffff08; font-size:11px;
-}
-input,button { font:inherit; }
-input {
-  width:100%; min-width:0; padding:10px;
-  border:1px solid var(--line); border-radius:9px;
-  background:#091727; color:var(--text); outline:none;
-}
-.add-row { display:flex; gap:7px; }
-.add-button {
-  flex-shrink:0; padding:8px 12px; border:0; border-radius:9px;
-  color:#07111f; background:var(--blue); font-weight:700;
-}
-.notes { list-style:none; padding:0; margin:8px 0 0; overflow:auto; }
-.notes li {
-  display:flex; align-items:center; gap:8px; padding:6px 0;
-  border-bottom:1px solid #ffffff12; font-size:12px;
-}
-.notes li span { flex:1; overflow-wrap:anywhere; }
-.del { padding:4px 7px; border:0; border-radius:6px; background:#ffffff12; color:white; }
-.devices { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.device {
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:5px; min-height:76px; padding:10px;
-  color:var(--text); text-decoration:none; text-align:center;
-  border:1px solid var(--line); border-radius:12px; background:#ffffff06;
-}
-.device .emoji { font-size:24px; }
-.device small { color:var(--muted); font-size:10px; }
-.note-hint { margin-top:8px; }
-@media (max-height:650px) and (orientation:landscape) {
-  body { padding:8px; }
-  .app { grid-template-rows:auto 100px minmax(0,1fr); gap:8px; }
-  .grid { gap:8px; }
-  .panel { padding:10px 13px; border-radius:13px; }
-  h2 { margin-bottom:7px; }
-  .weather-details { margin-top:8px; }
-  .stat { padding:6px; }
-  .device { min-height:58px; }
-}
-@media (orientation:portrait), (max-width:650px) {
-  body { height:auto; min-height:100vh; overflow:auto; }
-  .app { height:auto; display:flex; flex-direction:column; }
-  .hero { min-height:125px; }
-  .grid { display:flex; flex-direction:column; }
-  .panel { min-height:175px; }
-  .news-card { min-height:190px; }
-}
+  :root{
+    --panel:rgba(10,22,40,.58);
+    --panel-dark:rgba(5,10,20,.72);
+    --line:rgba(255,255,255,.18);
+    --text:#eef6ff;
+    --muted:#a9c2da;
+    --accent:#9fc3e8;
+    --good:#9fe8b1;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0;padding:14px;overflow:hidden;color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    background:#1b2a44;
+  }
+  /* 背景レイヤー（天気×時間帯で選ばれた写真をクロスフェード） */
+  .bgLayer{position:fixed;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 2.5s ease;z-index:0}
+  #bgFallback{position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,#2c3e63,#7a5570 55%,#31435f)}
+  #dim{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:5;transition:opacity 3s ease}
+  #app{position:relative;z-index:2;display:flex;flex-direction:column;height:100%;gap:10px}
+
+  .glass{background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(4px)}
+  .label{font-size:11px;color:var(--muted);letter-spacing:.12em}
+
+  /* 上部バー */
+  #topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-radius:12px}
+  #clock{font-size:22px;font-weight:800}
+  #date{font-size:12px;color:#c8d8ea;margin-left:10px}
+  #dimNote{font-size:10px;color:#8fa9c4;margin-left:10px}
+  #topRight{display:flex;align-items:center;gap:10px;font-size:13px}
+  #saleBanner{display:none;background:#e88f2a;color:#23160a;border-radius:999px;padding:3px 10px;font-weight:700;font-size:11px}
+  #miniWeather{display:flex;align-items:center;gap:5px}
+  #miniWeather svg{width:18px;height:18px}
+
+  /* メイン2カラム */
+  #main{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;flex:1;min-height:0}
+  #weather{padding:14px;display:flex;flex-direction:column}
+  #wNow{display:flex;align-items:center;gap:12px;margin-top:6px}
+  #wIcon svg{width:56px;height:56px}
+  #wTemp{font-size:44px;font-weight:800}
+  #wDetails{font-size:12px;color:#c8d8ea;line-height:1.7;margin-top:4px}
+  #hourly{display:flex;gap:6px;margin-top:10px}
+  #hourly .h{flex:1;background:rgba(255,255,255,.08);border-radius:8px;padding:5px 0;text-align:center;font-size:11px}
+  #hourly .h svg{width:18px;height:18px;vertical-align:-4px}
+  #tomorrow{font-size:12px;margin-top:10px;display:flex;align-items:center;gap:6px}
+  #tomorrow svg{width:18px;height:18px}
+
+  #videoPanel{background:var(--panel-dark);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;min-height:0}
+  #playerWrap{flex:1;position:relative;margin-top:8px;border-radius:10px;overflow:hidden;background:#000;min-height:0}
+  #playerWrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  #videoPlaceholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:13px;text-align:center;padding:0 20px}
+  #raceStrip{margin-top:10px;font-size:11px;color:#c8d8ea;background:rgba(255,255,255,.07);border-radius:8px;padding:6px 9px}
+
+  /* スマートホーム帯 */
+  #smarthome{display:flex;gap:10px;align-items:stretch;padding:10px 14px}
+  #room{min-width:180px}
+  #roomTemp{font-size:20px;font-weight:800}
+  #roomTemp .hum{font-size:14px;font-weight:600}
+  #comfort{font-size:11px;color:var(--good)}
+  #comfort.unset{color:var(--muted)}
+  #appliances{flex:1;display:flex;gap:8px}
+  .appliance{flex:1;background:rgba(255,255,255,.1);border:1px solid transparent;border-radius:10px;color:var(--text);font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;padding:9px 0;font-family:inherit}
+  .appliance:active{background:rgba(255,255,255,.22)}
+  .appliance .sub{display:flex;gap:4px}
+  .appliance .sub button{background:rgba(255,255,255,.14);border:0;color:var(--text);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:inherit}
+
+  /* ニュースティッカー（色は全体に合わせて濃紺） */
+  #ticker{display:flex;align-items:center;border-radius:10px;overflow:hidden}
+  #tickerLabel{background:#33506e;color:#dcebfb;font-size:11px;font-weight:800;padding:8px 10px;white-space:nowrap}
+  #tickerView{overflow:hidden;flex:1}
+  #tickerTrack{display:inline-flex;white-space:nowrap;animation:tick 60s linear infinite;padding:7px 0;font-size:12px}
+  #ticker.paused #tickerTrack{animation-play-state:paused}
+  #tickerTrack a{color:var(--text);text-decoration:none;margin-right:28px}
+  #tickerTrack a b{color:var(--accent);font-weight:700}
+  @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  #toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:rgba(5,10,20,.9);border:1px solid var(--line);color:var(--text);padding:8px 14px;border-radius:999px;font-size:12px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9}
 </style>
 </head>
 <body>
-<div class="app">
-  <header>
-    <div class="brand">HORIZON <span>HOME</span></div>
-    <div class="status">● SMART DISPLAY</div>
+<div id="bgFallback"></div>
+<div id="bgA" class="bgLayer"></div>
+<div id="bgB" class="bgLayer"></div>
+<div id="dim"></div>
+
+<div id="app">
+  <header id="topbar" class="glass">
+    <div><span id="clock">--:--</span><span id="date"></span><span id="dimNote">夜22時〜自動減光</span></div>
+    <div id="topRight">
+      <span id="saleBanner"></span>
+      <span id="miniWeather"><span id="miniIcon"></span><span id="miniText">京都 --°</span></span>
+    </div>
   </header>
 
-  <section class="panel hero">
-    <div>
-      <div class="eyebrow">YOUR PERSONAL SPACE</div>
-      <div class="clock" id="clock">--:--</div>
-      <div class="date" id="date">読み込み中...</div>
+  <div id="main">
+    <section id="weather" class="glass">
+      <div class="label">WEATHER ・ 京都</div>
+      <div id="wNow"><span id="wIcon"></span><span id="wTemp">--°</span></div>
+      <div id="wDetails">天気を取得中…</div>
+      <div id="hourly"></div>
+      <div id="tomorrow"></div>
+    </section>
+
+    <section id="videoPanel">
+      <div class="label">YOUTUBE ・ お気に入り</div>
+      <div id="playerWrap">
+        <div id="player"></div>
+        <iframe id="liveFrame" style="display:none" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        <div id="videoPlaceholder" style="display:none"></div>
+      </div>
+      <div id="raceStrip">競馬カレンダー：読み込み中…</div>
+    </section>
+  </div>
+
+  <section id="smarthome" class="glass">
+    <div id="room">
+      <div class="label">自分の部屋 ・ 室内</div>
+      <div id="roomTemp">--.-° <span class="hum">湿度 --%</span></div>
+      <div id="comfort" class="unset">温湿度は未設定です</div>
     </div>
-    <div class="hero-right">
-      <div class="location">KYOTO · 京都</div>
-      <div class="temperature" id="temp">--°</div>
-      <div class="description" id="weatherDesc">天気を取得中...</div>
+    <div id="appliances">
+      <button class="appliance" data-scene="light">照明</button>
+      <button class="appliance" data-scene="tv">テレビ</button>
+      <div class="appliance" style="cursor:default">エアコン
+        <span class="sub">
+          <button data-scene="airconOn">ON</button>
+          <button data-scene="airconOff">OFF</button>
+        </span>
+      </div>
     </div>
   </section>
 
-  <main class="grid">
-    <section class="panel">
-      <h2>WEATHER / 京都の天気</h2>
-      <div class="weather-details">
-        <div class="stat"><small>最高気温</small><strong id="high">--°</strong></div>
-        <div class="stat"><small>最低気温</small><strong id="low">--°</strong></div>
-        <div class="stat"><small>風速</small><strong id="wind">-- m/s</strong></div>
-      </div>
-      <p class="muted">天気データ：Open-Meteo</p>
-    </section>
-
-    <section class="panel news-card">
-      <h2>NEWS / 最新ニュース</h2>
-      <div class="news-source" id="newsSource">ニュースを取得しています...</div>
-      <a class="headline" id="headline" href="https://news.google.com/" target="_blank" rel="noopener">
-        ニュース見出しを読み込み中...
-      </a>
-      <div class="news-bottom">
-        <span id="newsCount">見出しを準備中</span>
-        <button class="small-button" id="nextNews" type="button">次のニュース →</button>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>SCHEDULE / 予定メモ</h2>
-      <form id="noteForm" class="add-row">
-        <input id="noteInput" maxlength="120" placeholder="予定を入力..." required>
-        <button class="add-button" type="submit">追加</button>
-      </form>
-      <ul class="notes" id="noteList"></ul>
-    </section>
-
-    <section class="panel">
-      <h2>SMART HOME / 家電操作</h2>
-      <div class="devices">
-        <a class="device" href="https://apps.apple.com/jp/app/switchbot/id1087374760" target="_blank" rel="noopener">
-          <span class="emoji">💡</span><strong>照明</strong><small>SwitchBotアプリ</small>
-        </a>
-        <a class="device" href="https://apps.apple.com/jp/app/switchbot/id1087374760" target="_blank" rel="noopener">
-          <span class="emoji">📺</span><strong>テレビ</strong><small>SwitchBotアプリ</small>
-        </a>
-      </div>
-      <p class="muted">家電の直接操作には追加連携が必要です。</p>
-    </section>
-  </main>
+  <div id="ticker" class="glass">
+    <div id="tickerLabel">NEWS</div>
+    <div id="tickerView"><div id="tickerTrack"><a>ニュースを取得中…</a></div></div>
+  </div>
 </div>
+<div id="toast"></div>
 
 <script>
-function updateClock() {
+/* ============================================================
+   HORIZON HOME 設定（ここだけ編集すれば大抵のことは済みます）
+   ============================================================ */
+const CONFIG = {
+  // 天気の場所（京都）
+  lat: 35.0116, lon: 135.7681, placeName: '京都',
+
+  // お気に入り動画のYouTube動画ID（URLの v= の後ろの文字列）
+  // 例: 'dQw4w9WgXcQ' 。空のままだと案内文が表示されます。
+  videoIds: [
+    // 'ここに動画ID',
+  ],
+
+  // JRA公式ライブ（開催日の発走前後だけ自動で切り替え）
+  jra: {
+    enabled: true,
+    channelId: 'UCj6AKkCWS6FJqf0o5wP45eQ', // JRA公式チャンネル
+    beforeMin: 5,  // 発走の何分前から
+    afterMin: 5,   // 発走の何分後まで
+    // 開催日ごとの発走時刻リスト [時刻, レース名]
+    // 対象は「その日の開催場すべて」でも「京都だけ」でもOK（時刻順に並べる）
+    raceDays: {
+      '2026-10-25': [
+        ['11:30','京都4R'],['12:20','京都5R'],['12:50','京都6R'],
+        ['13:20','京都7R'],['13:50','京都8R'],['14:25','京都9R'],
+        ['15:00','京都10R'],['15:40','京都11R 菊花賞'],['16:30','京都12R'],
+      ],
+      // '2026-11-01': [['15:40','東京11R 天皇賞（秋）']],
+    },
+  },
+
+  // 重賞カレンダー（下の帯に出す「次の重賞」）
+  gradedRaces: [
+    { date:'2026-10-25', name:'菊花賞', grade:'GⅠ', venue:'京都', time:'15:40' },
+    { date:'2026-11-01', name:'天皇賞（秋）', grade:'GⅠ', venue:'東京', time:'' },
+    // 以降は分かったものから追加してください
+  ],
+
+  // Amazonの大型セール（期間中だけ上部にバナーを表示）
+  saleEvents: [
+    // { name:'ブラックフライデー', start:'2026-11-27', end:'2026-12-01' },
+  ],
+
+  // Siriショートカットの名前（SwitchBotのシーンをショートカット化した名前）
+  // 空のままだと、ボタンを押したときに案内が出ます。
+  shortcuts: {
+    light: '',      // 例: '照明オンオフ'
+    tv: '',         // 例: 'テレビオンオフ'
+    airconOn: '',   // 例: 'エアコンON'
+    airconOff: '',  // 例: 'エアコンOFF'
+  },
+
+  // ニュース取得に使う中継（任意）。自前のWorkerを使う場合は
+  // 'https://あなたのWorker/rss?url=' のように末尾を ?url= にして指定。
+  // 空のままだと公開プロキシ（allorigins → codetabs）の順に試します。
+  newsProxyPrefix: '',
+
+  // 室内の温湿度（SwitchBot中継URL。cloudflare-worker.js 参照）
+  // 例: 'https://horizon-home-proxy.example.workers.dev/'
+  // 空のままだと室温・湿度は「未設定」表示になります。
+  // ※ SwitchBotのトークン/シークレットをこのファイルに直接書かないこと！
+  roomProxyUrl: '',
+
+  // 背景写真プール（Unsplash）。天気×時間帯でグループが選ばれ、その中からランダム表示。
+  backgrounds: {
+    clearDay:  ['photo-1500382017468-9049fed747ef','photo-1507525428034-b723cf961d3e','photo-1469474968028-56623f02e42e','photo-1441974231531-c6227db76b6e'],
+    clearDusk: ['photo-1506905925346-21bda4d32df4','photo-1472214103451-9374bd1c798e','photo-1500530855697-b586d89ba3ee'],
+    night:     ['photo-1519681393784-d120267933ba','photo-1419242902214-272b3f66ee7a','photo-1514565131-fce0801e5785'],
+    cloudyDay: ['photo-1470071459604-3b5ec3a7fe05','photo-1447752875215-b2761acb3c5d','photo-1503435980610-a51f3ddfee50'],
+    cloudyDusk:['photo-1470071459604-3b5ec3a7fe05','photo-1500530855697-b586d89ba3ee'],
+    rainDay:   ['photo-1433086966358-54859d0ed716','photo-1518837695005-2083093ee35b','photo-1470071459604-3b5ec3a7fe05'],
+    rainDusk:  ['photo-1433086966358-54859d0ed716','photo-1519501025264-65ba15a82390'],
+    snowDay:   ['photo-1519681393784-d120267933ba','photo-1470071459604-3b5ec3a7fe05'],
+    snowDusk:  ['photo-1519681393784-d120267933ba'],
+  },
+};
+const UNSPLASH = id => `https://images.unsplash.com/${id}?q=80&w=1600&auto=format&fit=crop`;
+
+/* ---------- 天気アイコン（SVG） ---------- */
+const ICONS = {
+  sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#ffd76a"/><g stroke="#ffd76a" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></g></svg>',
+  sunCloud: '<svg viewBox="0 0 24 24"><circle cx="8" cy="7" r="3.4" fill="#ffd76a"/><path d="M8 21a4.5 4.5 0 1 1 .7-8.93A5.5 5.5 0 0 1 19.2 13 3.9 3.9 0 0 1 18.5 21H8z" fill="#cfd8e3"/></svg>',
+  cloud: '<svg viewBox="0 0 24 24"><path d="M7 19a5 5 0 1 1 .8-9.92A6 6 0 0 1 19.5 11 4.25 4.25 0 0 1 18.5 19H7z" fill="#cfd8e3"/></svg>',
+  fog: '<svg viewBox="0 0 24 24"><path d="M7 13a5 5 0 1 1 .8-9.92A6 6 0 0 1 19.5 5 4.25 4.25 0 0 1 18.5 13H7z" fill="#cfd8e3"/><g stroke="#9fb6cc" stroke-width="1.8" stroke-linecap="round"><path d="M5 17h14M7 21h10"/></g></svg>',
+  drizzle: '<svg viewBox="0 0 24 24"><path d="M7 15a5 5 0 1 1 .8-9.92A6 6 0 0 1 19.5 7 4.25 4.25 0 0 1 18.5 15H7z" fill="#cfd8e3"/><g stroke="#6ec3ff" stroke-width="1.8" stroke-linecap="round"><path d="M9 18.5h.01M13 18.5h.01M17 18.5h.01M11 21.5h.01M15 21.5h.01"/></g></svg>',
+  rain: '<svg viewBox="0 0 24 24"><path d="M7 15a5 5 0 1 1 .8-9.92A6 6 0 0 1 19.5 7 4.25 4.25 0 0 1 18.5 15H7z" fill="#cfd8e3"/><path d="M8 17.5l-1.2 2.5M13 17.5l-1.2 2.5M18 17.5l-1.2 2.5" stroke="#6ec3ff" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  snow: '<svg viewBox="0 0 24 24"><path d="M7 15a5 5 0 1 1 .8-9.92A6 6 0 0 1 19.5 7 4.25 4.25 0 0 1 18.5 15H7z" fill="#cfd8e3"/><g fill="#eaf4ff"><circle cx="8.5" cy="19" r="1.3"/><circle cx="13" cy="21" r="1.3"/><circle cx="17.5" cy="19" r="1.3"/></g></svg>',
+  thunder: '<svg viewBox="0 0 24 24"><path d="M7 14a5 5 0 1 1 .8-9.92A6 6 0 0 1 19.5 6 4.25 4.25 0 0 1 18.5 14H7z" fill="#cfd8e3"/><path d="M12.5 13.5L9.8 18h2.4l-1.5 4 4.3-5.4h-2.5l1.7-3.1h-1.7z" fill="#ffd76a"/></svg>',
+};
+function iconFor(code){
+  if (code === 0) return ICONS.sun;
+  if (code === 1) return ICONS.sunCloud;
+  if (code === 2 || code === 3) return ICONS.cloud;
+  if (code === 45 || code === 48) return ICONS.fog;
+  if (code >= 51 && code <= 57) return ICONS.drizzle;
+  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return ICONS.rain;
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return ICONS.snow;
+  if (code >= 95) return ICONS.thunder;
+  return ICONS.cloud;
+}
+function groupFor(code){ // 背景用の天気グループ
+  if (code === 0 || code === 1) return 'clear';
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snow';
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95) return 'rain';
+  return 'cloudy';
+}
+
+/* ---------- 小物 ---------- */
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2,'0');
+const todayKey = (d=new Date()) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.style.opacity = 1;
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=> t.style.opacity = 0, 2600);
+}
+
+/* ---------- 時計と夜間減光 ---------- */
+function tickClock(){
   const now = new Date();
-  document.getElementById("clock").textContent =
-    new Intl.DateTimeFormat("ja-JP", {
-      timeZone:"Asia/Tokyo", hour:"2-digit", minute:"2-digit",
-      hour12:false
-    }).format(now);
-
-  document.getElementById("date").textContent =
-    new Intl.DateTimeFormat("ja-JP", {
-      timeZone:"Asia/Tokyo", year:"numeric", month:"long",
-      day:"numeric", weekday:"long"
-    }).format(now);
+  $('#clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const w = ['日','月','火','水','木','金','土'][now.getDay()];
+  $('#date').textContent = `${now.getMonth()+1}月${now.getDate()}日（${w}）`;
+  // 減光: 22:00〜6:00 を最大0.42、30分かけて出入り
+  const mins = now.getHours()*60 + now.getMinutes();
+  const ramp = (start, len) => Math.min(1, Math.max(0, (mins - start) / len));
+  let o = 0;
+  if (mins >= 22*60) o = ramp(22*60, 30);
+  else if (mins < 6*60) o = 1 - ramp(5*60+30, 30);
+  $('#dim').style.opacity = (o * 0.42).toFixed(2);
 }
-updateClock();
-setInterval(updateClock, 1000);
+setInterval(tickClock, 1000); tickClock();
 
-function weatherInfo(code) {
-  if (code === 0) return ["☀️ 快晴"];
-  if ([1,2].includes(code)) return ["🌤️ 晴れ・ところにより曇り"];
-  if (code === 3) return ["☁️ 曇り"];
-  if ([45,48].includes(code)) return ["🌫️ 霧"];
-  if ([51,53,55,56,57].includes(code)) return ["🌦️ 霧雨"];
-  if ([61,63,65,66,67,80,81,82].includes(code)) return ["🌧️ 雨"];
-  if ([71,73,75,77,85,86].includes(code)) return ["❄️ 雪"];
-  if ([95,96,99].includes(code)) return ["⛈️ 雷雨"];
-  return ["🌡️ 天気情報"];
-}
-async function loadWeather() {
-  const url = "https://api.open-meteo.com/v1/forecast?latitude=35.0116&longitude=135.7681&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&forecast_days=1";
+/* ---------- 天気（Open-Meteo） ---------- */
+let weatherState = null; // {code, sunrise, sunset}
+async function loadWeather(){
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}` +
+    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
+    `&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max` +
+    `&timezone=Asia%2FTokyo&forecast_days=3`;
   try {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error();
-    const d = await r.json();
-    document.getElementById("temp").textContent =
-      Math.round(d.current.temperature_2m) + "°";
-    document.getElementById("weatherDesc").textContent =
-      weatherInfo(d.current.weather_code)[0];
-    document.getElementById("high").textContent =
-      Math.round(d.daily.temperature_2m_max[0]) + "°";
-    document.getElementById("low").textContent =
-      Math.round(d.daily.temperature_2m_min[0]) + "°";
-    document.getElementById("wind").textContent =
-      Math.round(d.current.wind_speed_10m) + " m/s";
-  } catch {
-    document.getElementById("weatherDesc").textContent = "天気を取得できません";
+    const res = await fetch(url); const d = await res.json();
+    const c = d.current, dy = d.daily;
+    weatherState = { code: c.weather_code, sunrise: dy.sunrise[0], sunset: dy.sunset[0] };
+    $('#wIcon').innerHTML = iconFor(c.weather_code);
+    $('#wTemp').textContent = `${Math.round(c.temperature_2m)}°`;
+    $('#miniIcon').innerHTML = iconFor(c.weather_code);
+    $('#miniText').textContent = `${CONFIG.placeName} ${Math.round(c.temperature_2m)}°`;
+    $('#wDetails').innerHTML =
+      `体感 ${Math.round(c.apparent_temperature)}° ・ 湿度 ${c.relative_humidity_2m}% ・ 高 ${Math.round(dy.temperature_2m_max[0])}° / 低 ${Math.round(dy.temperature_2m_min[0])}°<br>` +
+      `降水確率 ${dy.precipitation_probability_max[0] ?? '--'}% ・ 風 ${Math.round(c.wind_speed_10m)}m/s`;
+    // この先4時間
+    const nowH = new Date().getHours();
+    const idx = d.hourly.time.findIndex(t => new Date(t).getHours() === nowH && new Date(t).getDate() === new Date().getDate());
+    let hh = '';
+    for (let i = 1; i <= 4 && idx + i < d.hourly.time.length; i++){
+      const t = new Date(d.hourly.time[idx+i]);
+      hh += `<div class="h">${t.getHours()}時<br>${iconFor(d.hourly.weather_code[idx+i])} ${Math.round(d.hourly.temperature_2m[idx+i])}°</div>`;
+    }
+    $('#hourly').innerHTML = hh;
+    $('#tomorrow').innerHTML = `明日：${iconFor(dy.weather_code[1])} ${Math.round(dy.temperature_2m_max[1])}° / ${Math.round(dy.temperature_2m_min[1])}°`;
+    updateBackground(true);
+  } catch(e) {
+    $('#wDetails').textContent = '天気を取得できませんでした（通信を確認してください）';
   }
 }
-loadWeather();
-setInterval(loadWeather, 15 * 60 * 1000);
+loadWeather(); setInterval(loadWeather, 15*60*1000);
 
-// ニュースRSSを読み込む
-const newsItems = [];
-let newsIndex = 0;
-let newsTimer = null;
-
-function showNews(index) {
-  if (!newsItems.length) return;
-  newsIndex = (index + newsItems.length) % newsItems.length;
-  const item = newsItems[newsIndex];
-  const link = document.getElementById("headline");
-  link.textContent = item.title;
-  link.href = item.link;
-  document.getElementById("newsSource").textContent =
-    item.source || "GOOGLE NEWS";
-  document.getElementById("newsCount").textContent =
-    (newsIndex + 1) + " / " + newsItems.length + " 件";
+/* ---------- 背景（天気×時間帯でプールからランダム） ---------- */
+let bgFlip = false, lastBg = localStorage.getItem('hh-last-bg') || '';
+function daypart(){
+  if (!weatherState) { const h = new Date().getHours(); return (h>=6&&h<17)?'Day':(h>=17&&h<19)?'Dusk':'Night'; }
+  const now = new Date();
+  const sr = new Date(weatherState.sunrise), ss = new Date(weatherState.sunset);
+  const m = 60*1000;
+  if (now < new Date(sr - 30*m) || now >= new Date(ss.getTime() + 30*m)) return 'Night';
+  if (now < new Date(sr.getTime() + 60*m)) return 'Dusk'; // 朝焼けも夕方プールで代用
+  if (now >= new Date(ss.getTime() - 60*m)) return 'Dusk';
+  return 'Day';
 }
-async function loadNews() {
-  const rss = "https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja";
-  const proxy = "https://api.rss2json.com/v1/api.json?rss_url=" +
-    encodeURIComponent(rss);
-  try {
-    const response = await fetch(proxy);
-    if (!response.ok) throw new Error();
-    const data = await response.json();
-    if (data.status !== "ok" || !data.items?.length) throw new Error();
-
-    newsItems.length = 0;
-    data.items.slice(0, 15).forEach(item => {
-      newsItems.push({
-        title: item.title,
-        link: item.link || "https://news.google.com/",
-        source: item.author || "GOOGLE NEWS"
-      });
-    });
-    showNews(0);
-    if (newsTimer) clearInterval(newsTimer);
-    newsTimer = setInterval(() => showNews(newsIndex + 1), 8000);
-  } catch {
-    document.getElementById("newsSource").textContent = "GOOGLE NEWS";
-    document.getElementById("headline").textContent =
-      "見出しを取得できません。ニュースサイトを開く ↗";
-    document.getElementById("headline").href = "https://news.google.com/";
-    document.getElementById("newsCount").textContent =
-      "接続を確認してください";
-  }
+function updateBackground(force){
+  const group = weatherState ? groupFor(weatherState.code) : 'cloudy';
+  const dp = daypart();
+  const key = dp === 'Night' ? 'night' : group + dp;
+  const pool = (CONFIG.backgrounds[key] || CONFIG.backgrounds.cloudyDay || []).map(UNSPLASH);
+  if (!pool.length) return;
+  let next = pool[Math.floor(Math.random()*pool.length)];
+  if (pool.length > 1 && next === lastBg) next = pool[(pool.indexOf(next)+1) % pool.length];
+  lastBg = next; localStorage.setItem('hh-last-bg', next);
+  const showEl = bgFlip ? $('#bgA') : $('#bgB'), hideEl = bgFlip ? $('#bgB') : $('#bgA');
+  const img = new Image();
+  img.onload = () => { showEl.style.backgroundImage = `url("${next}")`; showEl.style.opacity = 1; hideEl.style.opacity = 0; bgFlip = !bgFlip; };
+  img.onerror = () => { /* 読めなければ今の背景のまま */ };
+  img.src = next;
 }
-document.getElementById("nextNews").addEventListener("click", () => {
-  if (newsItems.length) showNews(newsIndex + 1);
+setInterval(()=> updateBackground(false), 30*60*1000);
+
+/* ---------- セールバナー ---------- */
+function checkSale(){
+  const today = todayKey();
+  const ev = (CONFIG.saleEvents||[]).find(e => e.start <= today && today <= e.end);
+  const el = $('#saleBanner');
+  if (ev){ el.textContent = `${ev.name} 開催中`; el.style.display = 'inline-block'; }
+  else el.style.display = 'none';
+}
+checkSale(); setInterval(checkSale, 60*60*1000);
+
+/* ---------- ニュース（Google News RSSをallorigins経由で取得） ---------- */
+const NEWS_FEEDS = [
+{ key:'top', label:'トップ', url:'https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja'},
+{ key:'kyoto', label:'京都', url:gnSearch('京都 when:1d')},
+{ key:'ai', label:'AI', url:gnSearch('AI when:1d')},
+{ key:'game', label:'ゲーム', url:gnSearch('ゲーム when:1d')},
+{ key:'gadget',label:'ガジェット',url:gnSearch('ガジェット when:1d')},
+{ key:'keiba', label:'競馬', url:gnSearch('競馬 when:1d')},
+{ key:'sale', label:'セール', url:gnSearch('Amazon セール when:7d')},
+];
+function gnSearch(q){ return `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=ja&gl=JP&ceid=JP:ja`;}
+// ティッカー10本あたりの配分：トップ3・京都2・他は各1
+const NEWS_PATTERN = ['top','top','top','kyoto','kyoto','ai','game','gadget','keiba','sale'];
+const NEWS_EXCLUDE = { gadget:['攻略']}; // 「ガジェット」違い（ゲーム内用語など）を落とす
+
+async function fetchViaProxies(url){
+const prefixes = CONFIG.newsProxyPrefix
+? [CONFIG.newsProxyPrefix]
+: ['https://api.allorigins.win/raw?url=', 'https://api.codetabs.com/v1/proxy?quest='];
+for (const p of prefixes){
+try {
+const res = await fetch(p + encodeURIComponent(url));
+if (!res.ok) continue;
+const text = await res.text();
+if (text.includes('<item>')) return text;
+} catch(e) { /* 次の中継を試す */ }
+}
+throw new Error('all proxies failed');
+}
+async function fetchFeed(feed){
+const text = await fetchViaProxies(feed.url);
+const xml = new DOMParser().parseFromString(text, 'text/xml');
+const items = [];
+xml.querySelectorAll('item').forEach(it => {
+const title = it.querySelector('title')?.textContent?.trim();
+const link = it.querySelector('link')?.textContent?.trim();
+const date = new Date(it.querySelector('pubDate')?.textContent || 0);
+if (title && link) items.push({ title, link, date, cat: feed.key, label: feed.label});
 });
-loadNews();
-setInterval(loadNews, 30 * 60 * 1000);
+const ex = NEWS_EXCLUDE[feed.key] || [];
+return items.filter(i =>!ex.some(w => i.title.includes(w)))
+.sort((a,b)=> b.date - a.date).slice(0, 12);
+}
+async function loadNews(){
+const results = await Promise.allSettled(NEWS_FEEDS.map(fetchFeed));
+const byCat = {};
+results.forEach((r,i)=>{ byCat[NEWS_FEEDS[i].key] = r.status==='fulfilled'? r.value: [];});
+// 重複除去（正規化した見出しで判定）
+const seen = new Set();
+for (const k in byCat) byCat[k] = byCat[k].filter(i => {
+const key = i.title.replace(/[\s　・「」『』]/g,'').slice(0, 30);
+if (seen.has(key)) return false; seen.add(key); return true;
+});
+// 配分パターンで交互に並べる（足りない枠はトップ→京都で穴埋め）
+const queues = JSON.parse(JSON.stringify(byCat));
+const picked = [];
+const take = k => queues[k] && queues[k].length? picked.push(queues[k].shift()): false;
+let guard = 0;
+while (picked.length < 40 && guard++ < 12){
+for (const k of NEWS_PATTERN){ if (!take(k)) { take('top') || take('kyoto');}}
+if (Object.values(queues).every(q =>!q.length)) break;
+}
+if (!picked.length){ if (!$('#tickerTrack').dataset.loaded) $('#tickerTrack').innerHTML = '<a>ニュースを取得できませんでした</a>'; return;}
+$('#tickerTrack').dataset.loaded = '1';
+const html = picked.map(i =>
+`<a href="${i.link}" target="_blank" rel="noopener"><b></b>${i.title.replace(/</g,'&lt;')}</a>`).join('');
+$('#tickerTrack').innerHTML = html + html; // 2周分つないで無限ループ
+// 長さに応じて速度を調整（目安: 1本あたり6秒）
+$('#tickerTrack').style.animationDuration = `${Math.max(40, picked.length * 6)}s`;
+}
+loadNews(); setInterval(loadNews, 30*60*1000);
+// ティッカーは触れている間だけ止める（タップで記事へ行きやすく）
+const tickerEl = $('#ticker');
+tickerEl.addEventListener('touchstart', ()=> tickerEl.classList.add('paused'), {passive:true});
+tickerEl.addEventListener('touchend', ()=> setTimeout(()=> tickerEl.classList.remove('paused'), 2500));
+tickerEl.addEventListener('mouseenter', ()=> tickerEl.classList.add('paused'));
+tickerEl.addEventListener('mouseleave', ()=> tickerEl.classList.remove('paused'));
 
-// 予定メモをブラウザ内に保存
-const storageKey = "horizon-home-notes-v1";
-function getNotes() {
-  try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); }
-  catch { return []; }
+/* ---------- 動画：お気に入りランダム / レース時間はJRAライブ ---------- */
+let ytPlayer = null, lastVideo = '', mode = 'fav'; // 'fav' | 'live'
+function pickNextVideo(){
+  const ids = CONFIG.videoIds.filter(Boolean);
+  if (!ids.length) return null;
+  let id = ids[Math.floor(Math.random()*ids.length)];
+  if (ids.length > 1 && id === lastVideo) id = ids[(ids.indexOf(id)+1) % ids.length];
+  lastVideo = id; return id;
 }
-function saveNotes(notes) {
-  try { localStorage.setItem(storageKey, JSON.stringify(notes)); }
-  catch { alert("予定を保存できませんでした"); }
+function showPlaceholder(html){
+  const p = $('#videoPlaceholder'); p.innerHTML = html; p.style.display = 'flex';
 }
-function renderNotes() {
-  const list = document.getElementById("noteList");
-  list.replaceChildren();
-  const notes = getNotes();
-  if (!notes.length) {
-    const li = document.createElement("li");
-    li.textContent = "予定はまだありません";
-    li.style.color = "var(--muted)";
-    list.appendChild(li);
-    return;
-  }
-  notes.forEach((note, index) => {
-    const li = document.createElement("li");
-    const span = document.createElement("span");
-    span.textContent = note;
-    const button = document.createElement("button");
-    button.className = "del";
-    button.type = "button";
-    button.textContent = "削除";
-    button.addEventListener("click", () => {
-      const updated = getNotes();
-      updated.splice(index, 1);
-      saveNotes(updated);
-      renderNotes();
-    });
-    li.append(span, button);
-    list.appendChild(li);
+function hidePlaceholder(){ $('#videoPlaceholder').style.display = 'none'; }
+function onYouTubeIframeAPIReady(){
+  const id = pickNextVideo();
+  if (!id){ showPlaceholder('お気に入り動画が未設定です<br>index.html の CONFIG.videoIds に動画IDを入れると、ここでランダム再生されます'); return; }
+  hidePlaceholder();
+  ytPlayer = new YT.Player('player', {
+    videoId: id,
+    playerVars: { autoplay:1, mute:1, playsinline:1, rel:0, controls:1 },
+    events: {
+      onReady: e => { e.target.mute(); e.target.playVideo(); },
+      onStateChange: e => { if (e.data === YT.PlayerState.ENDED){ const n = pickNextVideo(); if (n) ytPlayer.loadVideoById(n); } },
+      onError: () => { const n = pickNextVideo(); if (n) setTimeout(()=> ytPlayer.loadVideoById(n), 1500); },
+    },
   });
 }
-document.getElementById("noteForm").addEventListener("submit", event => {
-  event.preventDefault();
-  const input = document.getElementById("noteInput");
-  const note = input.value.trim();
-  if (!note) return;
-  const notes = getNotes();
-  notes.push(note);
-  saveNotes(notes);
-  input.value = "";
-  renderNotes();
+if (CONFIG.videoIds.filter(Boolean).length){
+  const tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+} else {
+  showPlaceholder('お気に入り動画が未設定です<br>index.html の CONFIG.videoIds に動画IDを入れると、ここでランダム再生されます');
+}
+
+/* レース判定：今日の発走リストから「窓」の中か、次の発走は何か */
+function raceStatus(now = new Date()){
+  const list = (CONFIG.jra.raceDays || {})[todayKey(now)] || [];
+  const items = list.map(([t, name]) => {
+    const [h, m] = t.split(':').map(Number);
+    const at = new Date(now); at.setHours(h, m, 0, 0);
+    return { at, name, t };
+  }).sort((a,b)=> a.at - b.at);
+  const before = CONFIG.jra.beforeMin*60000, after = CONFIG.jra.afterMin*60000;
+  const live = items.find(i => now >= new Date(i.at - before) && now <= new Date(i.at.getTime() + after));
+  const next = items.find(i => i.at > now);
+  return { live, next, hasToday: items.length > 0 };
+}
+function checkRaceMode(){
+  if (!CONFIG.jra.enabled) return;
+  const { live } = raceStatus();
+  const frame = $('#liveFrame');
+  if (live && mode !== 'live'){
+    mode = 'live'; hidePlaceholder();
+    if (ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+    frame.src = `https://www.youtube.com/embed/live_stream?channel=${CONFIG.jra.channelId}&autoplay=1&mute=1&playsinline=1&rel=0`;
+    frame.style.display = 'block';
+    const p = document.getElementById('player'); if (p) p.style.display = 'none';
+  } else if (!live && mode === 'live'){
+    mode = 'fav';
+    frame.removeAttribute('src'); frame.style.display = 'none';
+    const p = document.getElementById('player'); if (p) p.style.display = 'block';
+    if (ytPlayer && ytPlayer.playVideo){ ytPlayer.mute(); ytPlayer.playVideo(); }
+    else if (!CONFIG.videoIds.filter(Boolean).length) showPlaceholder('お気に入り動画が未設定です<br>index.html の CONFIG.videoIds に動画IDを入れると、ここでランダム再生されます');
+  }
+}
+function updateRaceStrip(){
+  const el = $('#raceStrip');
+  const now = new Date();
+  const { live, next, hasToday } = raceStatus(now);
+  const graded = (CONFIG.gradedRaces||[]).filter(g => g.date >= todayKey(now)).sort((a,b)=> a.date < b.date ? -1 : 1)[0];
+  let parts = [];
+  if (live) parts.push(`JRAライブ表示中：${live.name} ${live.t}発走`);
+  else if (hasToday && next) parts.push(`次の発走：${next.name} ${next.t}（あと${Math.max(1, Math.round((next.at - now)/60000))}分）`);
+  else if (hasToday) parts.push('本日のレースは終了しました');
+  if (graded){
+    const isToday = graded.date === todayKey(now);
+    const d = new Date(graded.date + 'T00:00:00');
+    parts.push(`${isToday ? '今日' : `${d.getMonth()+1}/${d.getDate()}`}の重賞：${graded.venue} ${graded.name}（${graded.grade}）${graded.time ? ' ' + graded.time + '発走' : ''}`);
+  }
+  el.textContent = parts.length ? parts.join(' ・ ') : '次の重賞は未登録です（CONFIG.gradedRaces に追加できます）';
+}
+setInterval(()=>{ checkRaceMode(); updateRaceStrip(); }, 20000);
+checkRaceMode(); updateRaceStrip();
+
+/* ---------- 室内の温湿度（中継URLから取得） ---------- */
+function comfortText(t, h){
+  if (h <= 35) return '乾燥気味です。加湿をどうぞ';
+  if (h >= 70) return '湿気が多めです。除湿や換気を';
+  const di = 0.81*t + 0.01*h*(0.99*t - 14.3) + 46.3; // 不快指数
+  if (di >= 80) return '蒸し暑いです。エアコン推奨';
+  if (di >= 75) return 'やや暑く感じます';
+  if (di < 60) return '少し肌寒いです';
+  if (h >= 40 && h <= 65 && di >= 60 && di < 75) return '快適です';
+  return 'ふつうの状態です';
+}
+async function loadRoom(){
+  if (!CONFIG.roomProxyUrl) return;
+  try {
+    const res = await fetch(CONFIG.roomProxyUrl);
+    const d = await res.json();
+    if (typeof d.temperature !== 'number') return;
+    $('#roomTemp').innerHTML = `${d.temperature.toFixed(1)}° <span class="hum">湿度 ${Math.round(d.humidity)}%</span>`;
+    const c = $('#comfort');
+    c.textContent = `${comfortText(d.temperature, d.humidity)} ・ たった今更新${typeof d.battery === 'number' ? ` ・ 電池 ${d.battery}%` : ''}`;
+    c.classList.remove('unset');
+  } catch(e) { /* 取れなければ前回の表示のまま */ }
+}
+loadRoom(); setInterval(loadRoom, 5*60*1000);
+
+/* ---------- 家電ボタン（Siriショートカット経由） ---------- */
+document.querySelectorAll('[data-scene]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.scene;
+    const name = (CONFIG.shortcuts || {})[key];
+    if (!name){ toast('ショートカット名が未設定です（index.html の CONFIG.shortcuts）'); return; }
+    const back = encodeURIComponent(location.href);
+    location.href = `shortcuts://x-callback-url/run-shortcut?name=${encodeURIComponent(name)}&x-success=${back}`;
+  });
 });
-renderNotes();
 </script>
 </body>
 </html>
