@@ -166,22 +166,21 @@ const CONFIG = {
   lat: 35.0116, lon: 135.7681, placeName: '京都',
 
   // お気に入り動画のYouTube動画ID（URLの v= の後ろの文字列）
-  // 例: 'dQw4w9WgXcQ' 。空のままだと下のニュース動画が流れます。
+  // 例: 'dQw4w9WgXcQ' 。空のままだと下の映像ローテーションが流れます。
   videoIds: [
     // 'ここに動画ID',
   ],
 
-  // 最新ニュース動画（お気に入りが空のときに使われます）
-  // 各チャンネルの「アップロード動画」を新しい順に繰り返し再生します。
-  // 埋め込み再生が禁止されているチャンネルは自動で次のチャンネルに切り替わります。
-  newsVideo: {
+  // 映像ローテーション（お気に入りが空のときに使われます）
+  // type:'videos' はそのチャンネルの最新動画を順番に、type:'live' はライブ配信を表示します。
+  videoRotation: {
     enabled: true,
-    channels: [
-      { channelId: 'UCGCZAYq5Xxojl_tSXcVJhiQ', label: 'ANNニュース' },
-      { channelId: 'UCNsidkYpIAQ4QaufptQBPHQ', label: 'ウェザーニュース' },
-      { channelId: 'UCWt0yfrBaUk148rxaOp4b4w', label: '日テレNEWS' },
-      { channelId: 'UCeCmAYh1ylwIsgGrmqaklzg', label: 'TBS NEWS DIG' },
-      { channelId: 'UCSPEjw8F2nQDtmUKPFNF7_A', label: 'NHK WORLD' },
+    minutes: 20, // 切り替え間隔（分）
+    sources: [
+      { type: 'videos', channelId: 'UCGCZAYq5Xxojl_tSXcVJhiQ', label: 'ANNニュース' },
+      { type: 'live',   channelId: 'UCNsidkYpIAQ4QaufptQBPHQ', label: 'ウェザーニュースLiVE' },
+      { type: 'videos', channelId: 'UCeCmAYh1ylwIsgGrmqaklzg', label: 'TBS NEWS DIG' },
+      { type: 'videos', channelId: 'UCWt0yfrBaUk148rxaOp4b4w', label: '日テレNEWS' },
     ],
   },
 
@@ -498,8 +497,8 @@ tickerEl.addEventListener('touchend', ()=> setTimeout(()=> tickerEl.classList.re
 tickerEl.addEventListener('mouseenter', ()=> tickerEl.classList.add('paused'));
 tickerEl.addEventListener('mouseleave', ()=> tickerEl.classList.remove('paused'));
 
-/* ---------- 動画：お気に入りランダム / レース時間はJRAライブ ---------- */
-let ytPlayer = null, lastVideo = '', mode = 'fav'; // 'fav' | 'live'
+/* ---------- 動画：20分交代ローテーション / レース時間はJRAライブ / お気に入り優先 ---------- */
+let ytPlayer = null, lastVideo = '', mode = 'rotate'; // 'fav' | 'rotate' | 'jra'
 function pickNextVideo(){
   const ids = CONFIG.videoIds.filter(Boolean);
   if (!ids.length) return null;
@@ -511,69 +510,96 @@ function showPlaceholder(html){
   const p = $('#videoPlaceholder'); p.innerHTML = html; p.style.display = 'flex';
 }
 function hidePlaceholder(){ $('#videoPlaceholder').style.display = 'none'; }
-function newsChannels(){
-  const nv = CONFIG.newsVideo || {};
-  if (Array.isArray(nv.channels) && nv.channels.length) return nv.channels;
-  if (nv.channelId) return [{ channelId: nv.channelId, label: nv.label }];
-  return [];
-}
-let newsChIdx = 0, newsErrStreak = 0, newsSwitches = 0, newsGaveUp = false;
+function setVideoLabel(t){ const el = $('#videoLabel'); if (el) el.textContent = t; }
 function uploadsOf(ch){ return ch && ch.channelId ? 'UU' + ch.channelId.slice(2) : ''; }
-function newsUploadsId(){ return uploadsOf(newsChannels()[newsChIdx]); }
+function rotationSources(){
+  const r = CONFIG.videoRotation || {};
+  return (r.enabled && Array.isArray(r.sources)) ? r.sources : [];
+}
+function rotationActive(){ return !CONFIG.videoIds.filter(Boolean).length && rotationSources().length > 0; }
+let rotIdx = 0, rotDeadline = Date.now() + ((CONFIG.videoRotation && CONFIG.videoRotation.minutes) || 20) * 60000;
+try { rotIdx = Math.min(Math.max(0, parseInt(localStorage.getItem('hh-rot-idx') || '0', 10) || 0), Math.max(0, rotationSources().length - 1)); } catch(_){}
+let rotErrStreak = 0, rotFailCycles = 0, rotGaveUp = false;
 function baseVideoLabel(){
   if (CONFIG.videoIds.filter(Boolean).length) return 'YOUTUBE ・ お気に入り';
-  const ch = newsChannels()[newsChIdx];
-  if (CONFIG.newsVideo && CONFIG.newsVideo.enabled && ch) return `YOUTUBE ・ ${ch.label || 'ニュース動画'}`;
-  return 'YOUTUBE';
+  const src = rotationSources()[rotIdx];
+  return src ? `YOUTUBE ・ ${src.label}` : 'YOUTUBE';
 }
-function showNewsGiveUp(){
-  newsGaveUp = true;
+function showVideoGiveUp(){
+  rotGaveUp = true;
   try { ytPlayer.stopVideo(); } catch(_){}
-  showPlaceholder('ニュース動画を再生できませんでした<br><a href="https://www.youtube.com/@ANNnewsCH" target="_blank" rel="noopener" style="color:#9fc3e8">YouTubeでANNnewsCHを開く</a>');
+  showPlaceholder('映像を再生できませんでした<br><a href="https://www.youtube.com/@ANNnewsCH" target="_blank" rel="noopener" style="color:#9fc3e8">YouTubeでANNnewsCHを開く</a>');
 }
-function handleNewsError(){
-  if (newsGaveUp) return;
-  newsErrStreak++;
-  const chs = newsChannels();
-  if (newsErrStreak >= 3 && chs.length){
-    newsErrStreak = 0; newsSwitches++;
-    if (newsSwitches >= chs.length){ showNewsGiveUp(); return; }
-    newsChIdx = (newsChIdx + 1) % chs.length;
-    setVideoLabel(baseVideoLabel());
-    try { ytPlayer.loadPlaylist({ list: newsUploadsId(), listType: 'playlist', index: 0 }); ytPlayer.setLoop(true); ytPlayer.playVideo(); return; } catch(_){}
+function applyRotation(){
+  const srcs = rotationSources(); if (!srcs.length || mode === 'jra') return;
+  const src = srcs[rotIdx]; if (!src) return;
+  setVideoLabel(`YOUTUBE ・ ${src.label}`);
+  const frame = $('#liveFrame');
+  if (src.type === 'live'){
+    if (ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+    frame.dataset.owner = 'rotation';
+    frame.src = `https://www.youtube.com/embed/live_stream?channel=${src.channelId}&autoplay=1&mute=1&playsinline=1&rel=0`;
+    frame.style.display = 'block';
+    const p = document.getElementById('player'); if (p) p.style.display = 'none';
+    hidePlaceholder();
+  } else {
+    if (frame.dataset.owner === 'rotation'){ frame.removeAttribute('src'); frame.style.display = 'none'; delete frame.dataset.owner; }
+    const p = document.getElementById('player'); if (p) p.style.display = 'block';
+    hidePlaceholder();
+    if (ytPlayer && ytPlayer.loadPlaylist){
+      ytPlayer.loadPlaylist({ list: uploadsOf(src), listType: 'playlist', index: 0 });
+      ytPlayer.setLoop(true); ytPlayer.mute(); ytPlayer.playVideo();
+    }
+  }
+}
+function advanceRotation(){
+  const srcs = rotationSources(); if (!srcs.length) return;
+  rotIdx = (rotIdx + 1) % srcs.length;
+  try { localStorage.setItem('hh-rot-idx', String(rotIdx)); } catch(_){}
+  rotErrStreak = 0;
+  rotDeadline = Date.now() + ((CONFIG.videoRotation && CONFIG.videoRotation.minutes) || 20) * 60000;
+  if (!rotGaveUp) applyRotation();
+}
+function handleRotateError(){
+  if (rotGaveUp || mode !== 'rotate') return;
+  rotErrStreak++;
+  if (rotErrStreak >= 3){
+    rotFailCycles++;
+    if (rotFailCycles >= rotationSources().length){ showVideoGiveUp(); return; }
+    advanceRotation();
+    return;
   }
   try { ytPlayer.nextVideo(); } catch(_){}
 }
-function setVideoLabel(t){ const el = $('#videoLabel'); if (el) el.textContent = t; }
 function onYouTubeIframeAPIReady(){
   const id = pickNextVideo();
   if (id){
-    setVideoLabel(baseVideoLabel()); hidePlaceholder();
+    mode = 'fav'; setVideoLabel(baseVideoLabel()); hidePlaceholder();
     ytPlayer = new YT.Player('player', {
       videoId: id,
       playerVars: { autoplay:1, mute:1, playsinline:1, rel:0, controls:1 },
       events: {
-        onReady: e => { e.target.mute(); if (mode === 'live') e.target.pauseVideo(); else e.target.playVideo(); },
+        onReady: e => { e.target.mute(); if (mode === 'jra') e.target.pauseVideo(); else e.target.playVideo(); },
         onStateChange: e => { if (e.data === YT.PlayerState.ENDED){ const n = pickNextVideo(); if (n) ytPlayer.loadVideoById(n); } },
         onError: () => { const n = pickNextVideo(); if (n) setTimeout(()=> ytPlayer.loadVideoById(n), 1500); },
       },
     });
     return;
   }
-  const list = newsUploadsId();
-  if (CONFIG.newsVideo && CONFIG.newsVideo.enabled && list){
-    setVideoLabel(baseVideoLabel()); hidePlaceholder();
+  const firstVideo = rotationSources().find(s => s.type !== 'live');
+  if (rotationActive() && firstVideo){
+    mode = 'rotate';
     ytPlayer = new YT.Player('player', {
-      playerVars: { autoplay:1, mute:1, playsinline:1, rel:0, controls:1, listType:'playlist', list },
+      playerVars: { autoplay:1, mute:1, playsinline:1, rel:0, controls:1, listType:'playlist', list: uploadsOf(firstVideo) },
       events: {
-        onReady: e => { e.target.mute(); e.target.setLoop(true); if (mode === 'live') e.target.pauseVideo(); else e.target.playVideo(); },
-        onStateChange: e => { if (e.data === YT.PlayerState.PLAYING) newsErrStreak = 0; },
-        onError: () => handleNewsError(), // 再生できない動画は次へ、続くようならチャンネル切替
+        onReady: e => { e.target.mute(); e.target.setLoop(true); applyRotation(); },
+        onStateChange: e => { if (e.data === YT.PlayerState.PLAYING){ rotErrStreak = 0; rotFailCycles = 0; } },
+        onError: () => handleRotateError(),
       },
     });
     return;
   }
-  showPlaceholder('動画が未設定です<br>index.html の CONFIG.videoIds に動画IDを入れるか、newsVideo を有効にしてください');
+  showPlaceholder('動画が未設定です<br>index.html の CONFIG.videoIds に動画IDを入れるか、videoRotation を有効にしてください');
 }
 { const tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag); }
 
@@ -594,20 +620,29 @@ function checkRaceMode(){
   if (!CONFIG.jra.enabled) return;
   const { live } = raceStatus();
   const frame = $('#liveFrame');
-  if (live && mode !== 'live'){
-    mode = 'live'; hidePlaceholder(); setVideoLabel('YOUTUBE ・ JRAライブ');
+  if (live && mode !== 'jra'){
+    mode = 'jra'; hidePlaceholder(); setVideoLabel('YOUTUBE ・ JRAライブ');
     if (ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+    frame.dataset.owner = 'jra';
     frame.src = `https://www.youtube.com/embed/live_stream?channel=${CONFIG.jra.channelId}&autoplay=1&mute=1&playsinline=1&rel=0`;
     frame.style.display = 'block';
     const p = document.getElementById('player'); if (p) p.style.display = 'none';
-  } else if (!live && mode === 'live'){
-    mode = 'fav'; setVideoLabel(baseVideoLabel());
-    frame.removeAttribute('src'); frame.style.display = 'none';
+  } else if (!live && mode === 'jra'){
+    if (frame.dataset.owner === 'jra'){ frame.removeAttribute('src'); frame.style.display = 'none'; delete frame.dataset.owner; }
     const p = document.getElementById('player'); if (p) p.style.display = 'block';
-    if (newsGaveUp){ showNewsGiveUp(); }
-    else if (ytPlayer && ytPlayer.playVideo){ ytPlayer.mute(); ytPlayer.playVideo(); }
-    else if (!CONFIG.videoIds.filter(Boolean).length && !(CONFIG.newsVideo && CONFIG.newsVideo.enabled)) showPlaceholder('動画が未設定です');
+    if (rotationActive()){
+      mode = 'rotate';
+      rotDeadline = Date.now() + ((CONFIG.videoRotation && CONFIG.videoRotation.minutes) || 20) * 60000;
+      if (rotGaveUp) showVideoGiveUp(); else applyRotation();
+    } else {
+      mode = 'fav'; setVideoLabel(baseVideoLabel());
+      if (ytPlayer && ytPlayer.playVideo){ ytPlayer.mute(); ytPlayer.playVideo(); }
+      else if (!CONFIG.videoIds.filter(Boolean).length) showPlaceholder('動画が未設定です');
+    }
   }
+}
+function rotationTick(){
+  if (mode === 'rotate' && !rotGaveUp && Date.now() >= rotDeadline) advanceRotation();
 }
 function updateRaceStrip(){
   const el = $('#raceStrip');
@@ -625,7 +660,7 @@ function updateRaceStrip(){
   }
   el.textContent = parts.length ? parts.join(' ・ ') : '次の重賞は未登録です（CONFIG.gradedRaces に追加できます）';
 }
-setInterval(()=>{ checkRaceMode(); updateRaceStrip(); }, 20000);
+setInterval(()=>{ checkRaceMode(); rotationTick(); updateRaceStrip(); }, 20000);
 checkRaceMode(); updateRaceStrip();
 
 /* ---------- 室内の温湿度（中継URLから取得） ---------- */
