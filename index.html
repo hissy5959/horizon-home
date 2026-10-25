@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- HORIZON HOME build: 2026-10-26 news-card2 (YouTube廃止・軽量モード削除済み) -->
+<!-- HORIZON HOME build: 2026-10-26 news-card3 (YouTube廃止・軽量モード削除済み) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -67,7 +67,9 @@
   #card{display:block;text-decoration:none;color:var(--text);margin-top:12px;cursor:pointer}
   #cardCat{display:inline-block;background:#33506e;color:#dcebfb;border-radius:999px;padding:3px 12px;font-weight:800;font-size:12px}
   #cardCat.sale{background:#e88f2a;color:#23160a}
-  #cardTitle{font-size:24px;font-weight:800;line-height:1.5;margin-top:12px;min-height:108px}
+  #cardImg{position:relative;height:170px;border-radius:10px;overflow:hidden;background-color:#0a1526;background-size:cover;background-position:center}
+  #cardImg #cardCat{position:absolute;left:10px;bottom:10px}
+  #cardTitle{font-size:24px;font-weight:800;line-height:1.5;margin-top:12px;min-height:72px}
   #cardMeta{font-size:12px;color:var(--muted);margin-top:10px}
   #cardDots{margin-top:12px;font-size:9px;color:var(--muted);letter-spacing:.3em;min-height:12px}
   #raceStrip{margin-top:10px;font-size:11px;color:#c8d8ea;background:rgba(255,255,255,.07);border-radius:8px;padding:6px 9px}
@@ -133,7 +135,7 @@
     <section id="infoPanel">
       <div class="label">NEWS ＆ SALE</div>
       <a id="card" target="_blank" rel="noopener">
-        <span id="cardCat" class="news">ニュース</span>
+        <div id="cardImg"><span id="cardCat" class="news">ニュース</span></div>
         <div id="cardTitle">ニュースを取得中…</div>
         <div id="cardMeta"></div>
       </a>
@@ -367,6 +369,15 @@ checkSale(); setInterval(checkSale, 60*60*1000);
 
 /* ---------- 右パネル：ニュース＆セールの回転カード ---------- */
 let cardItems = [], cardIdx = 0, cardTimer = null;
+const CARD_IMAGES = {
+top: 'photo-1504711434969-e33886168f5c',
+kyoto: 'photo-1493976040374-85c8e12f0c0e',
+ai: 'photo-1677442136019-21780ecad995',
+game: 'photo-1511512578047-dfb367046420',
+gadget: 'photo-1498049794561-7780e7231661',
+keiba: 'photo-1553284965-83fd3e82fa5a',
+sale: 'photo-1472851294608-062f824d29cc',
+};
 function relTime(d){
 const t = d instanceof Date ? d.getTime() : new Date(d).getTime();
 const m = Math.max(1, Math.round((Date.now() - t) / 60000));
@@ -382,6 +393,8 @@ cardIdx++;
 const cat = $('#cardCat');
 cat.textContent = i.label;
 cat.className = i.cat === 'sale' ? 'sale' : 'news';
+const imgId = CARD_IMAGES[i.cat] || CARD_IMAGES.top;
+$('#cardImg').style.backgroundImage = `url("https://images.unsplash.com/${imgId}?q=80&w=1200&auto=format&fit=crop")`;
 $('#cardTitle').textContent = i.title;
 $('#cardMeta').textContent = `${i.label} ・ ${relTime(i.date || Date.now())}`;
 $('#card').href = i.link;
