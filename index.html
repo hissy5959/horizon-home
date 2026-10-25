@@ -218,15 +218,15 @@ const CONFIG = {
   // Siriショートカットの名前（SwitchBotのシーンをショートカット化した名前）
   // 空のままだと、ボタンを押したときに案内が出ます。
   shortcuts: {
-    light: '',      // 例: '照明オンオフ'
-    tv: '',         // 例: 'テレビオンオフ'
-    airconOn: '',   // 例: 'エアコンON'
-    airconOff: '',  // 例: 'エアコンOFF'
+    light: '照明オンオフ',
+    tv: 'テレビオンオフ',
+    airconOn: 'エアコンON',
+    airconOff: 'エアコンOFF',
   },
 
   // ニュース取得に使う中継（任意）。自前のWorkerを使う場合は
   // 'https://あなたのWorker/rss?url=' のように末尾を ?url= にして指定。
-  // 空のままだと公開プロキシ（allorigins → codetabs）の順に試します。
+  // 指定した中継が失敗した場合は公開プロキシ（allorigins → codetabs）へ順に切り替えます。
   newsProxyPrefix: 'https://horizon-home-proxy.hissy5599.workers.dev/rss?url=',
 
   // 室内の温湿度（SwitchBot中継URL。cloudflare-worker.js 参照）
@@ -411,9 +411,10 @@ try { return await fetch(url, { signal: ctl.signal, cache: 'no-store' }); }
 finally { clearTimeout(timer); }
 }
 async function fetchViaProxies(url){
+const pubProxies = ['https://api.allorigins.win/raw?url=', 'https://api.codetabs.com/v1/proxy?quest='];
 const prefixes = CONFIG.newsProxyPrefix
-? [CONFIG.newsProxyPrefix]
-: ['https://api.allorigins.win/raw?url=', 'https://api.codetabs.com/v1/proxy?quest='];
+? [CONFIG.newsProxyPrefix, ...pubProxies]
+: pubProxies;
 // 中継が断続的に失敗するため、間隔を空けて最大3周まで再試行する
 for (let round = 0; round < 3; round++){
 for (const p of prefixes){
