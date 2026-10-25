@@ -51,8 +51,12 @@
   #hourly{display:flex;gap:6px;margin-top:10px}
   #hourly .h{flex:1;background:rgba(255,255,255,.08);border-radius:8px;padding:5px 0;text-align:center;font-size:11px}
   #hourly .h svg{width:18px;height:18px;vertical-align:-4px}
-  #tomorrow{font-size:12px;margin-top:10px;display:flex;align-items:center;gap:6px}
-  #tomorrow svg{width:18px;height:18px}
+  #weeklyLabel{margin-top:12px}
+  #weekly .row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:12px}
+  #weekly .row:last-child{border-bottom:0}
+  #weekly .row .d{display:flex;align-items:center;gap:6px}
+  #weekly .row svg{width:17px;height:17px}
+  #weekly .row .pop{color:var(--accent)}
 
   #videoPanel{background:var(--panel-dark);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;min-height:0}
   #playerWrap{flex:1;position:relative;margin-top:8px;border-radius:10px;overflow:hidden;background:#000;min-height:0}
@@ -107,7 +111,8 @@
       <div id="wNow"><span id="wIcon"></span><span id="wTemp">--°</span></div>
       <div id="wDetails">天気を取得中…</div>
       <div id="hourly"></div>
-      <div id="tomorrow"></div>
+      <div class="label" id="weeklyLabel">週間予報</div>
+      <div id="weekly"></div>
     </section>
 
     <section id="videoPanel">
@@ -286,7 +291,7 @@ async function loadWeather(){
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}` +
     `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
     `&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max` +
-    `&timezone=Asia%2FTokyo&forecast_days=3`;
+    `&timezone=Asia%2FTokyo&forecast_days=8`;
   try {
     const res = await fetch(url); const d = await res.json();
     const c = d.current, dy = d.daily;
@@ -307,7 +312,16 @@ async function loadWeather(){
       hh += `<div class="h">${t.getHours()}時<br>${iconFor(d.hourly.weather_code[idx+i])} ${Math.round(d.hourly.temperature_2m[idx+i])}°</div>`;
     }
     $('#hourly').innerHTML = hh;
-    $('#tomorrow').innerHTML = `明日：${iconFor(dy.weather_code[1])} ${Math.round(dy.temperature_2m_max[1])}° / ${Math.round(dy.temperature_2m_min[1])}°`;
+    // 週間予報（明日からの7日分を縦に並べてパネル下部を埋める）
+    const wd = ['日','月','火','水','木','金','土'];
+    let wk = '';
+    for (let i = 1; i <= 7 && i < dy.time.length; i++){
+      const dt = new Date(dy.time[i] + 'T00:00:00');
+      const label = `${i === 1 ? '明日 ' : ''}${dt.getMonth()+1}/${dt.getDate()}（${wd[dt.getDay()]}）`;
+      const pop = dy.precipitation_probability_max[i];
+      wk += `<div class="row"><span>${label}</span><span class="d">${iconFor(dy.weather_code[i])} ${Math.round(dy.temperature_2m_max[i])}° / ${Math.round(dy.temperature_2m_min[i])}°${pop != null && pop >= 30 ? ` <span class="pop">降水 ${pop}%</span>` : ''}</span></div>`;
+    }
+    $('#weekly').innerHTML = wk;
     updateBackground(true);
   } catch(e) {
     $('#wDetails').textContent = '天気を取得できませんでした（通信を確認してください）';
@@ -369,17 +383,28 @@ function gnSearch(q){ return `https://news.google.com/rss/search?q=${encodeURICo
 const NEWS_PATTERN = ['top','top','top','kyoto','kyoto','ai','game','gadget','keiba','sale'];
 const NEWS_EXCLUDE = { gadget:['攻略']}; // 「ガジェット」違い（ゲーム内用語など）を落とす
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function fetchWithTimeout(url, ms){
+const ctl = new AbortController();
+const timer = setTimeout(()=> ctl.abort(), ms);
+try { return await fetch(url, { signal: ctl.signal, cache: 'no-store' }); }
+finally { clearTimeout(timer); }
+}
 async function fetchViaProxies(url){
 const prefixes = CONFIG.newsProxyPrefix
 ? [CONFIG.newsProxyPrefix]
 : ['https://api.allorigins.win/raw?url=', 'https://api.codetabs.com/v1/proxy?quest='];
+// 中継が断続的に失敗するため、間隔を空けて最大3周まで再試行する
+for (let round = 0; round < 3; round++){
 for (const p of prefixes){
 try {
-const res = await fetch(p + encodeURIComponent(url));
+const res = await fetchWithTimeout(p + encodeURIComponent(url), 20000);
 if (!res.ok) continue;
 const text = await res.text();
 if (text.includes('<item>')) return text;
-} catch(e) { /* 次の中継を試す */ }
+} catch(e) { /* 次の中継・次の周回を試す */ }
+}
+if (round < 2) await sleep(2500);
 }
 throw new Error('all proxies failed');
 }
@@ -397,8 +422,33 @@ const ex = NEWS_EXCLUDE[feed.key] || [];
 return items.filter(i =>!ex.some(w => i.title.includes(w)))
 .sort((a,b)=> b.date - a.date).slice(0, 12);
 }
+const NEWS_CACHE_KEY = 'hh-news-cache-v1';
+function renderTicker(items){
+const html = items.map(i =>
+`<a href="${i.link}" target="_blank" rel="noopener"><b>【${i.label}】</b>${String(i.title).replace(/</g,'&lt;')}</a>`).join('');
+const track = $('#tickerTrack');
+track.innerHTML = html + html; // 2周分つないで無限ループ
+track.style.animationDuration = `${Math.max(40, items.length * 6)}s`; // 目安: 1本あたり6秒
+track.dataset.loaded = '1';
+}
+function restoreNewsCache(){
+try {
+const cache = JSON.parse(localStorage.getItem(NEWS_CACHE_KEY) || 'null');
+if (cache && Array.isArray(cache.items) && cache.items.length) renderTicker(cache.items);
+} catch(e) {}
+}
 async function loadNews(){
-const results = await Promise.allSettled(NEWS_FEEDS.map(fetchFeed));
+// 中継への負荷を下げるため、同時に取りに行くのは2本まで
+const results = new Array(NEWS_FEEDS.length);
+let cursor = 0;
+async function worker(){
+while (cursor < NEWS_FEEDS.length){
+const i = cursor++;
+try { results[i] = { status:'fulfilled', value: await fetchFeed(NEWS_FEEDS[i]) }; }
+catch(e){ results[i] = { status:'rejected', reason: e }; }
+}
+}
+await Promise.all([worker(), worker()]);
 const byCat = {};
 results.forEach((r,i)=>{ byCat[NEWS_FEEDS[i].key] = r.status==='fulfilled'? r.value: [];});
 // 重複除去（正規化した見出しで判定）
@@ -417,14 +467,10 @@ for (const k of NEWS_PATTERN){ if (!take(k)) { take('top') || take('kyoto');}}
 if (Object.values(queues).every(q =>!q.length)) break;
 }
 if (!picked.length){ if (!$('#tickerTrack').dataset.loaded) $('#tickerTrack').innerHTML = '<a>ニュースを取得できませんでした</a>'; return;}
-$('#tickerTrack').dataset.loaded = '1';
-const html = picked.map(i =>
-`<a href="${i.link}" target="_blank" rel="noopener"><b></b>${i.title.replace(/</g,'&lt;')}</a>`).join('');
-$('#tickerTrack').innerHTML = html + html; // 2周分つないで無限ループ
-// 長さに応じて速度を調整（目安: 1本あたり6秒）
-$('#tickerTrack').style.animationDuration = `${Math.max(40, picked.length * 6)}s`;
+renderTicker(picked);
+try { localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({ at: Date.now(), items: picked.map(i => ({ title: i.title, link: i.link, label: i.label })) })); } catch(e) {}
 }
-loadNews(); setInterval(loadNews, 30*60*1000);
+restoreNewsCache(); loadNews(); setInterval(loadNews, 30*60*1000);
 // ティッカーは触れている間だけ止める（タップで記事へ行きやすく）
 const tickerEl = $('#ticker');
 tickerEl.addEventListener('touchstart', ()=> tickerEl.classList.add('paused'), {passive:true});
