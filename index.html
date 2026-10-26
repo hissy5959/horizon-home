@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- HORIZON HOME build: 2026-10-26 note-notify (YouTube廃止・軽量モード削除済み) -->
+<!-- HORIZON HOME build: 2026-10-26 note-notify2 (YouTube廃止・軽量モード削除済み) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -527,7 +527,7 @@ try { localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({ at: Date.now(), item
 restoreNewsCache(); loadNews(); setInterval(loadNews, 30*60*1000);
 
 // note下書きの合図チェック（Worker の /note-draft を15分ごと）
-const NOTE_DRAFT_URL = (CONFIG.roomProxyUrl || '') + '/note-draft';
+const NOTE_DRAFT_URL = (CONFIG.roomProxyUrl || '').replace(/\/+$/, '') + '/note-draft';
 async function checkNoteDraft(first) {
   if (!CONFIG.roomProxyUrl) return;
   try {
