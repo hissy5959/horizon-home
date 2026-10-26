@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- HORIZON HOME build: 2026-10-26 news-race (ニュース取得を中継の競争方式に変更) -->
+<!-- HORIZON HOME build: 2026-10-26 tapreload (時計タップで最新版に更新) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -121,7 +121,7 @@
 
 <div id="app">
   <header id="topbar" class="glass">
-    <div><span id="clock">--:--</span><span id="date"></span><span id="dimNote">夜22時〜自動減光</span></div>
+    <div id="reloadArea" title="タップで最新版に更新"><span id="clock">--:--</span><span id="date"></span><span id="dimNote">夜22時〜自動減光 ・ 時計タップで更新</span></div>
     <div id="topRight">
       <span id="saleBanner"></span>
       <span id="miniWeather"><span id="miniIcon"></span><span id="miniText">京都 --°</span></span>
@@ -687,6 +687,19 @@ loadRoom(); setInterval(loadRoom, 5*60*1000);
   }
   show(0);
   setInterval(() => show(idx + 1), Math.max(1, cfg.rotateMin || 10) * 60 * 1000);
+})();
+
+/* ---------- 時計タップで最新版に更新 ---------- */
+(function(){
+  const el = $('#reloadArea');
+  if (!el) return;
+  el.style.cursor = 'pointer';
+  el.addEventListener('click', () => {
+    toast('最新版に更新します…');
+    // URLに時刻を付けて読み直すことで、古いキャッシュではなく最新版を確実に取りに行く
+    // （localStorageのニュースキャッシュ等は消えない）
+    setTimeout(() => location.replace(location.pathname + '?v=' + Date.now()), 350);
+  });
 })();
 
 /* ---------- 家電ボタン（Siriショートカット経由） ---------- */
