@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- HORIZON HOME build: 2026-10-26 livecam2 (左カラムのはみ出し修正) -->
+<!-- HORIZON HOME build: 2026-10-26 news-race (ニュース取得を中継の競争方式に変更) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -484,19 +484,37 @@ const pubProxies = ['https://api.allorigins.win/raw?url=', 'https://api.codetabs
 const prefixes = CONFIG.newsProxyPrefix
 ? [CONFIG.newsProxyPrefix, ...pubProxies]
 : pubProxies;
-// 中継が断続的に失敗するため、間隔を空けて最大3周まで再試行する
-for (let round = 0; round < 3; round++){
-for (const p of prefixes){
-try {
-const res = await fetchWithTimeout(p + encodeURIComponent(url), 20000);
-if (!res.ok) continue;
-const text = await res.text();
-if (text.includes('<item>')) return text;
-} catch(e) { /* 次の中継・次の周回を試す */ }
-}
-if (round < 2) await sleep(2500);
+// 中継を順番に試すと遅い中継に当たったとき何分もかかるため、
+// 全中継へ同時に取りに行き、最初に正しく届いたものを採用する（競争方式）。
+// 全部失敗したら少し置いてもう1周だけ試す。
+const enc = encodeURIComponent(url);
+for (let round = 0; round < 2; round++){
+const text = await raceProxies(prefixes, enc, 12000);
+if (text) return text;
+if (round < 1) await sleep(1500);
 }
 throw new Error('all proxies failed');
+}
+function raceProxies(prefixes, enc, ms){
+return new Promise(resolve => {
+let pending = prefixes.length, done = false;
+const ctls = [];
+const finish = v => {
+if (done) return; done = true;
+ctls.forEach(c => { try { c.abort(); } catch(e){} });
+resolve(v);
+};
+prefixes.forEach(p => {
+let settled = false;
+const settle = () => { if (settled) return false; settled = true; return --pending === 0; };
+const ctl = new AbortController(); ctls.push(ctl);
+const timer = setTimeout(() => { try { ctl.abort(); } catch(e){} if (settle()) finish(null); }, ms);
+fetch(p + enc, { signal: ctl.signal, cache: 'no-store' })
+.then(res => res.ok ? res.text() : Promise.reject(new Error('bad status')))
+.then(text => { clearTimeout(timer); if (text && text.includes('<item>')) finish(text); else if (settle()) finish(null); })
+.catch(() => { clearTimeout(timer); if (settle()) finish(null); });
+});
+});
 }
 async function fetchFeed(feed){
 const text = await fetchViaProxies(feed.url);
@@ -530,7 +548,7 @@ if (cache && Array.isArray(cache.items) && cache.items.length){ renderTicker(cac
 } catch(e) {}
 }
 async function loadNews(){
-// 中継への負荷を下げるため、同時に取りに行くのは2本まで
+// 同時に取りに行くのは3フィードまで（各フィード内では中継同士が競争する）
 const results = new Array(NEWS_FEEDS.length);
 let cursor = 0;
 async function worker(){
@@ -540,7 +558,7 @@ try { results[i] = { status:'fulfilled', value: await fetchFeed(NEWS_FEEDS[i]) }
 catch(e){ results[i] = { status:'rejected', reason: e }; }
 }
 }
-await Promise.all([worker(), worker()]);
+await Promise.all([worker(), worker(), worker()]);
 const byCat = {};
 results.forEach((r,i)=>{ byCat[NEWS_FEEDS[i].key] = r.status==='fulfilled'? r.value: [];});
 // 重複除去（正規化した見出しで判定）
