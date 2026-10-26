@@ -76,14 +76,40 @@
         <div id="livecamHead">
           <span class="liveDot"></span>
           <span class="label">LIVE CAMERA</span>
-          <span id="livecamTitle">嵐山・渡月橋（京都市観光協会）</span>
+          <span id="livecamTitle">嵐山・渡月橋</span>
+          <span id="livecamCount" style="margin-left:auto;font-size:12px;color:#9db9d9"></span>
         </div>
         <div id="livecamFrame">
-          <iframe src="https://www.youtube.com/embed/2WB7nCKjijg?autoplay=1&mute=1&playsinline=1&rel=0"
+          <iframe id="livecamPlayer" src="https://www.youtube.com/embed/2WB7nCKjijg?autoplay=1&mute=1&playsinline=1&rel=0"
                   allow="autoplay; encrypted-media" allowfullscreen
-                  title="嵐山・渡月橋ライブカメラ"></iframe>
+                  title="ライブカメラ"></iframe>
         </div>
       </section>
+      <script>
+        // プレビュー用：切り替え間隔はデモ用に15秒（本番は10分）
+        const CAMERAS = [
+          { name: '嵐山・渡月橋（京都）',     id: '2WB7nCKjijg' },
+          { name: '竹林の小径（京都）',       id: 'JLlY6Cg17cc' },
+          { name: '京都駅前（京都）',         id: 'ABJKHT5ZrF4' },
+          { name: '伏見稲荷（京都）',         id: 'evMpyQnPwxQ' },
+          { name: '渋谷スクランブル交差点（東京）', id: '5B4LmH4JbnY' },
+          { name: '浅草・宝蔵門（東京）',     id: 'NsFHt76uwh8' },
+          { name: '東京駅・丸の内（東京）',   id: 'ZN4gh5IOowM' },
+        ];
+        let camIdx = 0;
+        const player = document.getElementById('livecamPlayer');
+        const titleEl = document.getElementById('livecamTitle');
+        const countEl = document.getElementById('livecamCount');
+        function showCam(i) {
+          camIdx = i % CAMERAS.length;
+          const c = CAMERAS[camIdx];
+          player.src = 'https://www.youtube.com/embed/' + c.id + '?autoplay=1&mute=1&playsinline=1&rel=0';
+          titleEl.textContent = c.name;
+          countEl.textContent = (camIdx + 1) + ' / ' + CAMERAS.length;
+        }
+        showCam(0);
+        setInterval(() => showCam(camIdx + 1), 15 * 1000);
+      </script>
     </div>
 
     <section id="infoPanel" class="glass">
