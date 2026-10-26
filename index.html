@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- HORIZON HOME build: 2026-10-26 livecam (左下にライブカメラ回転表示を追加) -->
+<!-- HORIZON HOME build: 2026-10-26 livecam2 (左カラムのはみ出し修正) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -64,7 +64,8 @@
   #weeklyTrack .pop{color:var(--accent)}
 
   /* 左カラム（天気＋ライブカメラ） */
-  #leftCol{display:flex;flex-direction:column;gap:10px;min-height:0;align-self:stretch}
+  #leftCol{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0;overflow:hidden;align-self:stretch}
+  #leftCol #weather{flex-shrink:0}
   #livecam{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow:hidden}
   #livecamHead{display:flex;align-items:center;gap:8px;padding:0 2px}
   #liveDot{width:8px;height:8px;border-radius:50%;background:#ff5252;box-shadow:0 0 8px #ff5252;flex-shrink:0}
